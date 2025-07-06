@@ -1,12 +1,15 @@
-package com.example.project.entity;
+package com.example.reserve.models;
 
-import jakarta.persistence.*;
+import com.example.reserve.types.RetentionPeriod;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
+
+@Document(collection = "company")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String username;
@@ -16,11 +19,11 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
 
-    @Enumerated(EnumType.STRING)
+//    @Enumerated(EnumType.STRING)
     private RetentionPeriod retentionPeriod; // 3/6/12개월 선택
 
-    @ManyToOne
-    @JoinColumn(name = "company_id")
+//    @ManyToOne
+//    @JoinColumn(name = "company_id")
     private Company company;
 }
 

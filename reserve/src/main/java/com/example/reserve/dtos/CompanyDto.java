@@ -1,4 +1,4 @@
-package com.example.project.dto;
+package com.example.reserve.dtos;
 
 public class CompanyDto {
     private Long id;

@@ -1,4 +1,4 @@
-package com.example.project.entity;
+package com.example.reserve.types;
 
 public enum  UserRole {
     ADMIN,       // 전체 관리

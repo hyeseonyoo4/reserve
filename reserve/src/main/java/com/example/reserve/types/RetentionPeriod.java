@@ -1,4 +1,4 @@
-package com.example.project.entity;
+package com.example.reserve.types;
 
 public enum RetentionPeriod {
     THREE_MONTHS,

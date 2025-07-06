@@ -1,6 +1,6 @@
-package com.example.project.dto;
+package com.example.reserve.dtos;
 
-import com.example.project.entity.RetentionPeriod;
+import com.example.reserve.types.RetentionPeriod;
 
 public class UserDto {
     private Long id;
