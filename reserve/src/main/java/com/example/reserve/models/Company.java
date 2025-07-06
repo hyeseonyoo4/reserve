@@ -2,24 +2,23 @@ package com.example.reserve.models;
 
 import com.example.reserve.types.RetentionPeriod;
 import com.example.reserve.types.ServiceType;
+import lombok.Builder;
+import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-
-import java.util.List;
-
 @Document(collection = "company")
+@Data
+@Builder
 public class Company {
     @Id
-    private Long id;
+    private String id;
 
-    private String name;        // 업체명
+    private String name;// 업체명
+    @Indexed(unique = true)
     private String businessId;  // 사업자아이디
 
     private ServiceType serviceType;
-
     private RetentionPeriod retentionPeriod;
-
-//    @OneToMany(mappedBy = "company")
-    private List<User> users;
 }
