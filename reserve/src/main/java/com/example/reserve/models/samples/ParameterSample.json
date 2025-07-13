@@ -1,0 +1,25 @@
+{
+  "_id": {
+    "$oid": "686a859b5836a02f196013c5"
+  },
+  "botId": "686a859b5836a02f196013c5",
+  "baseVersion": 1,
+  "parameterList": [
+    {
+      "key": "param1",
+      "name": "Parameter 1",
+      "type": "STRING | NUMBER",
+      "defaultValue": "Default Value",
+      "formatType": "NONE | EMAIL | PHONE | DATE | NUMBER | PASSWORD",
+      "description": "This is a sample parameter"
+    },
+    {
+      "key": "param2",
+      "name": "Parameter 2",
+      "type": "STRING | NUMBER",
+      "defaultValue": "Another Default Value",
+      "formatType": "NONE | EMAIL | PHONE | DATE | NUMBER | PASSWORD",
+      "description": "This is another sample parameter"
+    }
+  ]
+}

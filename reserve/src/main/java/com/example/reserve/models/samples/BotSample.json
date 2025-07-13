@@ -1,0 +1,7 @@
+{
+  "_id": {
+    "$oid": "686a859b5836a02f196013c5"
+  },
+  "name": "Test Company",
+  "botType": "BOT | HUMAN | HYBRID"
+}

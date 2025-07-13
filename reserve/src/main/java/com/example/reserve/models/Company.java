@@ -17,7 +17,7 @@ public class Company {
 
     private String name;// 업체명
     @Indexed(unique = true)
-    private String businessId;  // 사업자아이디
+    private String businessId;  // 사업자 등록 번호
 
     private ServiceType serviceType;
     private RetentionPeriod retentionPeriod;

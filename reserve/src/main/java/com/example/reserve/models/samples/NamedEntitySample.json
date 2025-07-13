@@ -1,0 +1,29 @@
+{
+  "_id": {
+    "$oid": "686a859b5836a02f196013c5"
+  },
+  "botId": "686a859b5836a02f196013c5",
+  "baseVersion": 1, // Base version 이 null 이면, Draft 버전용
+  "namedEntityList": [
+    {
+      "key": "COFFEE",
+      "name": "Entity 1",
+      "tags": [
+        "아이스아메리카노",
+        "카페라떼"
+      ],
+      "type": "STRING | NUMBER",
+      "description": "This is a sample named entity"
+    },
+    {
+      "key": "COFFEE",
+      "name": "Entity 2",
+      "tags": [
+        "녹차",
+        "홍차"
+      ],
+      "type": "STRING | NUMBER",
+      "description": "This is another sample named entity"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "_id": {
+    "$oid": "686a859b5836a02f196013c5"
+  },
+  "botId": "686a859b5836a02f196013c5",
+  "isDraft": true,
+  "baseVersion": 1,
+  "createdAt": {
+      "$date": "2023-10-01T12:00:00Z"
+  },
+  "modifiedAt": {
+      "$date": "2023-10-01T12:00:00Z"
+  },
+  "blockList": [
+    {
+      "key": "block1",
+      "type": "START",
+      "content": "Welcome to our service!"
+    },
+    {
+      "key": "block2",
+      "type": "MESSAGE",
+      "content": "How can I assist you today?"
+    },
+    {
+      "key": "block3",
+      "type": "END",
+      "content": "Thank you for using our service!"
+    }
+  ]
+}
