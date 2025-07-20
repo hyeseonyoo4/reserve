@@ -27,6 +27,292 @@
     },
     {
       "key": "block3",
+      "type": "MESSAGE",
+      "content": "Could you tell me your name, age, and gender?"
+    },
+
+    //최근 2주 동안, 거의 매일 슬프거나 허무하다고 느꼈나요?
+    {
+      "key": "block4",
+      "type": "SELECT",
+      "content": "In the past two weeks, have you felt sad or empty almost every day?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block5"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block5"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block5"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block5"
+        }
+      ]
+    },
+    //예전에 즐거웠던 활동들이 더 이상 즐겁지 않거나 무의미하게 느껴지나요?
+    {
+      "key": "block5",
+      "type": "SELECT",
+      "content": "Do you no longer enjoy activities that you used to find enjoyable or meaningful?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block6"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block6"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block6"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block6"
+        }
+      ]
+    },
+    //잠이 잘 오지 않거나 너무 많이 자는 문제가 있나요?
+    {
+      "key": "block6",
+      "type": "SELECT",
+      "content": "Have you had trouble sleeping or found yourself sleeping too much?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block7"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block7"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block7"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block7"
+        }
+      ]
+    },
+    //피곤하거나 무기력한 느낌이 자주 드나요?
+    {
+      "key": "block7",
+      "type": "SELECT",
+      "content": "Do you often feel tired or lacking in energy?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block8"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block8"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block8"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block8"
+        }
+      ]
+    },
+    //식욕이 줄었거나 늘어났다고 느끼시나요?
+    {
+      "key": "block8",
+      "type": "SELECT",
+      "content": "Have you noticed changes in your appetite, either eating too little or too much?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block9"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block9"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block9"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block9"
+        }
+      ]
+    },
+    //자신이 쓸모없거나 죄책감을 느끼는 일이 자주 있나요?
+    {
+      "key": "block9",
+      "type": "SELECT",
+      "content": "Do you often feel worthless or overwhelmed by guilt",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block10"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block10"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block10"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block10"
+        }
+      ]
+    },
+    //일상적인 일에 집중하거나 결정하기 어렵다고 느끼시나요?
+    {
+      "key": "block10",
+      "type": "SELECT",
+      "content": "Do you have difficulty concentrating or making everyday decisions?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block11"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block11"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block11"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block11"
+        }
+      ]
+    },
+    //죽음이나 자살에 대해 자주 생각하나요?
+    {
+      "key": "block11",
+      "type": "SELECT",
+      "content": "Do you frequently think about death or have thoughts of suicide?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block12"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block12"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block12"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block12"
+        }
+      ]
+    },
+    //갑작스럽게 가슴이 답답해지고 숨이 막힐 것 같은 불안 발작이 있나요?
+    {
+      "key": "block12",
+      "type": "SELECT",
+      "content": "Do you experience sudden panic attacks, such as shortness of breath or chest tightness?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block13"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block13"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block13"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block13"
+        }
+      ]
+    },
+    //공공장소나 낯선 환경에서 두려움이나 불안감이 심해져 회피하게 되나요? 이걸 영어로 물어보고 싶은데 어떻게 변경하니?
+    {
+      "key": "block13",
+      "type": "SELECT",
+      "content": "Do you feel intense fear or anxiety in public places or unfamiliar environments, to the point that you try to avoid them?",
+      "options": [
+        {
+          "label": "Not at all",
+          "value": 0,
+          "next": "block14"
+        },
+        {
+          "label": "Several days",
+          "value": 1,
+          "next": "block14"
+        },
+        {
+          "label": "More than half the days",
+          "value": 2,
+          "next": "block14"
+        },
+        {
+          "label": "Nearly every day",
+          "value": 3,
+          "next": "block14"
+        }
+      ]
+    },
+    {
+      "key": "block",
       "type": "END",
       "content": "Thank you for using our service!"
     }

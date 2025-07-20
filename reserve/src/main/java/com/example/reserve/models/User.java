@@ -1,5 +1,6 @@
 package com.example.reserve.models;
 
+import com.example.reserve.models.samples.Role;
 import com.example.reserve.types.RetentionPeriod;
 import lombok.Builder;
 import lombok.Data;
@@ -29,8 +30,7 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
 
-    // TODO: 유저 에서는 제거해도 될 것 같음
-    private RetentionPeriod retentionPeriod; // 3/6/12개월 선택
+    private Role role;
 
     // TODO - 권한: ADMIN, MANAGER, USER
 }

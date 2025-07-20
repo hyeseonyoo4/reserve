@@ -23,7 +23,6 @@ public class UserDto {
                 .id(dto.getId())
                 .username(dto.getUsername())
                 .email(dto.getEmail())
-                .retentionPeriod(dto.getRetentionPeriod())
                 .companyId(dto.getCompanyId())
         .build();
     }
@@ -34,7 +33,6 @@ public class UserDto {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .retentionPeriod(user.getRetentionPeriod())
                 .companyId(user.getCompanyId())
                 .build();
     }
