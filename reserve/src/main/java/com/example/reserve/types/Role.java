@@ -1,4 +1,4 @@
-package com.example.reserve.models.samples;
+package com.example.reserve.types;
 
 public enum Role {
     ADMIN,

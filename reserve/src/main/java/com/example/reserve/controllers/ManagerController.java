@@ -17,6 +17,7 @@ public class ManagerController {
 
     // ID로 조회
     @GetMapping("/{id}")
+    @Deprecated
     public ResponseEntity<ManagerDto> getManager(@PathVariable String id) {
         ManagerDto dto = managerService.getManagerById(id);
         return ResponseEntity.ok(dto);

@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 public class Admin {
 
     @Id
