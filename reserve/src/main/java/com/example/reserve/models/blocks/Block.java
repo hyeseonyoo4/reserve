@@ -1,5 +1,6 @@
 package com.example.reserve.models.blocks;
 
+import com.example.reserve.models.Scenario;
 import com.example.reserve.types.BlockType;
 import lombok.Builder;
 import lombok.Data;
@@ -13,24 +14,28 @@ public class Block {
     @Id
     private String id;
 
-//    @Indexed
-//    @Field("bot_id")
-//    private String bot_id;
-
+    private Scenario scenario;
     private BlockType type;
+    private String name;
+    private String description;
 
     // 공통, END Block 제외
     private String nextId;
 
+    // Block의 위치
+    private Double x; // x 좌표
+    private Double y; // y 좌표
+
     //    START,
     //    END,
 
-    //    SELECT,
-
-    //    FORM,
     //    FREE,
-    //    API,
-    //    SPLIT,
+    private FreeBlockInfo freeBlockInfo;
+    //    SELECT,
+    //    FORM,
     //    MESSAGE,
 
+    //    SPLIT,
+
+    //    API,
 }
