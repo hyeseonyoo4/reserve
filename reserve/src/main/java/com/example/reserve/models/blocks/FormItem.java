@@ -5,20 +5,31 @@ import com.example.reserve.types.FormType;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
+
+import java.util.List;
+
 @Data
 @Builder
 public class FormItem {
     @Id
     private String id;
 
-    private String parameterKey;
-
-    private String title;
-
-    private String placeholder;
-
-
     @Builder.Default
     private FormType formType = FormType.TEXT;
 
+    private String title;
+    private String placeholder;
+    private boolean required;
+
+    // FormType이 OPTION, RADIO, CHECKBOX일 때 선택지 목록
+    private List<FormValue> options;
+
+    private String parameterKey;
+
+    @Builder
+    @Data
+    public static class FormValue {
+        private String displayText; // 표시할 텍스트
+        private String value; // 실제 값
+    }
 }

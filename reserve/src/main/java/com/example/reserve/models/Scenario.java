@@ -17,12 +17,6 @@ public class Scenario {
     @Id
     private String id;
 
-//    @Indexed
-//    @Field("bot_id")
-//    private String bot_id;
-
-//    private BlockType type;
-
     private String name;
     private String key;
     private Boolean isDraft;
