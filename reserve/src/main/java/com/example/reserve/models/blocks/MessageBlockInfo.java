@@ -1,21 +1,15 @@
 package com.example.reserve.models.blocks;
 
-import com.example.reserve.types.BlockType;
-import com.example.reserve.types.ChatDisplayType;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
 import java.util.List;
 
-
 @Data
 @Builder
-public class SelectBlock {
+public class MessageBlockInfo {
     @Id
     private String id;
-
-
-    private List<Bubble> bubbles;
-    private String parameterKey;
+    private List<Bubble> messages;
 }

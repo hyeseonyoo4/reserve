@@ -15,6 +15,9 @@ public class Bubble {
     @Id
     private String id;
 
+    @Builder.Default
+    private ChatDisplayType style = ChatDisplayType.CARD;
+
     private Integer order;
     private String imagePath;
     private String text;

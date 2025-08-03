@@ -12,6 +12,12 @@ import java.util.List;
 public class FreeBlockInfo {
     @Id
     private String id;
+
+    private List<Bubble> questions;    //
+    private Integer questionCount;
+    private Boolean isRepresentative; // 대표질문여부.
+
+    private String parameterKey;
 }
 
 
