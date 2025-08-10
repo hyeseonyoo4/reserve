@@ -32,10 +32,14 @@ public class Block {
     //    FREE,
     private FreeBlockInfo freeBlockInfo;
     //    SELECT,
-    //    FORM,
-    //    MESSAGE,
+    private SelectBlock selectBlock;
 
+    //    FORM,
+    private FormItem formItem;
+    //    MESSAGE,
+    private MessageBlockInfo messageBlockInfo;
     //    SPLIT,
+    private QuarterCondition quarterCondition;
 
     //    API,
 }

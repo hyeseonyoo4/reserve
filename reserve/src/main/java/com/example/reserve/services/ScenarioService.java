@@ -1,5 +1,6 @@
 package com.example.reserve.services;
 
+import com.example.reserve.dtos.ScenarioDto;
 import com.example.reserve.models.Company;
 import com.example.reserve.models.Scenario;
 import com.example.reserve.models.User;
@@ -10,6 +11,7 @@ import com.example.reserve.types.Role;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ScenarioService {
@@ -22,6 +24,28 @@ public class ScenarioService {
     public Scenario saveScenario(Scenario scenario) {
         // TODO: 이름 중복 확인
         return scenarioRepository.save(scenario);
+    }
+    // 💡 ID로 조회
+    public Scenario getScenarioById(String id) {
+        return scenarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+    }
+    //시나리오 조회
+    public List<ScenarioDto.SimpleScenarioDto> getAllScenarios() {
+        return scenarioRepository.findAll().stream()
+                .map(ScenarioDto::toSimpleDto)
+                .collect(Collectors.toList());
+    }
+
+    //업데이트
+    public Scenario updateScenario(Scenario scenario) {
+        return scenarioRepository.save(scenario);
+    }
+
+    // 삭제
+    public boolean deleteScenario(Scenario scenario) {
+        scenarioRepository.delete(scenario);
+        return true;
     }
 
 //    private final UserRepository userRepository;
