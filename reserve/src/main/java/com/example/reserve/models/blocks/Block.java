@@ -14,7 +14,6 @@ public class Block {
     @Id
     private String id;
 
-    private Scenario scenario;
     private BlockType type;
     private String name;
     private String description;

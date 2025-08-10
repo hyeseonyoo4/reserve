@@ -4,7 +4,6 @@ import com.example.reserve.dtos.AdminDto;
 import com.example.reserve.dtos.BlockDto;
 import com.example.reserve.models.User;
 import com.example.reserve.services.BlockService;
-import com.example.reserve.services.CompanyService;
 import com.example.reserve.types.BlockType;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/blocks")
@@ -21,49 +21,56 @@ public class BlockController {
 
     private final BlockService blockService;
 
-    public BlockController(BlockService blockService) {
-        this.blockService = blockService;
-    }
+//    public BlockController(BlockService blockService) {
+//        this.blockService = blockService;
+//    }
     // 전체 조회
-    @GetMapping
-    public List<BlockDto> getAllBlocks() {
-        return blockService.getAllBlocks();
-    }
+//    @GetMapping
+//    public List<BlockDto> getAllBlocks() {
+//        return blockService.getAllBlocks();
+//    }
 
     // 시나리오별 조회
     @GetMapping("/scenario/{scenarioId}")
     public List<BlockDto> getBlocksByScenario(@PathVariable String scenarioId) {
-        return blockService.getBlocksByScenario(scenarioId);
+        return blockService.getBlocksByScenario(scenarioId).stream()
+                .map(BlockDto::toDto)
+                .collect(Collectors.toList());
     }
 
     // 생성
-    @PostMapping
-    public ResponseEntity<AdminDto> createBlock(
+    @PostMapping("/scenario/{scenarioId}")
+    public ResponseEntity<BlockDto> createBlock(
+            @PathVariable String scenarioId,
+            @RequestParam BlockType type,
             @RequestParam String name,
-            @RequestParam String id) {
-        return ResponseEntity.ok(blockService.createAdmin(name, id));
+            @RequestParam Double x,
+            @RequestParam Double y){
+        return ResponseEntity.ok(BlockDto.toDto(blockService.createBlock(scenarioId, type, name, x, y)));
     }
     //  수정
-    @PutMapping("/{id}")
+    @PutMapping("/scenario/{scenarioId}/{id}")
     public ResponseEntity<BlockDto> updateBlock(
+            @PathVariable String scenarioId,
             @PathVariable String id,
-            @RequestParam String name,
-            @RequestParam String scenarioId) {
-        return ResponseEntity.ok(blockService.updateBlock(id, name, scenarioId));
+            @RequestBody BlockDto blockDto
+            ) {
+        return ResponseEntity.ok(BlockDto.toDto(blockService.updateBlock(scenarioId, id, blockDto)));
     }
     // 삭제
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/scenario/{scenarioId}/{id}")
     public ResponseEntity<Void> deleteBlock(
+            @PathVariable String scenarioId,
             @PathVariable String id,
             HttpSession session) {
 
-        User loginUser = (User) session.getAttribute("loginUser");
+//        User loginUser = (User) session.getAttribute("loginUser");
+//
+//        if (loginUser == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
 
-        if (loginUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        blockService.deleteBlock(id, loginUser);
+        blockService.deleteBlock(scenarioId, id);
         return ResponseEntity.noContent().build();
     }
 }

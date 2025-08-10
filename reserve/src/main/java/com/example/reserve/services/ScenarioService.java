@@ -31,21 +31,28 @@ public class ScenarioService {
                 .orElseThrow(() -> new RuntimeException("Scenario not found"));
     }
     //시나리오 조회
-    public List<ScenarioDto.SimpleScenarioDto> getAllScenarios() {
-        return scenarioRepository.findAll().stream()
-                .map(ScenarioDto::toSimpleDto)
-                .collect(Collectors.toList());
+    public List<Scenario> getAllScenarios() {
+        return scenarioRepository.findAll();
     }
 
     //업데이트
-    public Scenario updateScenario(Scenario scenario) {
-        return scenarioRepository.save(scenario);
+    public Scenario updateScenario(String id, ScenarioDto.ScenarioCreateDto updateDto) {
+        // 기존 시나리오 조회
+        Scenario existing = this.getScenarioById(id);
+
+        existing.setName(updateDto.getName());
+        existing.setKey(updateDto.getKey());
+        existing.setIsDraft(updateDto.getIsDraft());
+        existing.setVersion(updateDto.getVersion());
+        existing.setVersionDescription(updateDto.getVersionDescription());
+
+        return scenarioRepository.save(existing);
     }
 
     // 삭제
-    public boolean deleteScenario(Scenario scenario) {
+    public void deleteScenario(String id) {
+        Scenario scenario = this.getScenarioById(id);
         scenarioRepository.delete(scenario);
-        return true;
     }
 
 //    private final UserRepository userRepository;

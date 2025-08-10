@@ -13,12 +13,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BlockDto {
 
-    private String id;
+    private String id;  ////////
 
-    // Scenario는 참조 ID만 보냄
-    private String scenarioId;
-
-    private BlockType type;
+    private BlockType type; //////////
     private String name;
     private String description;
 
@@ -36,4 +33,20 @@ public class BlockDto {
     private MessageBlockInfo messageBlockInfo; // MESSAGE
     private QuarterCondition quarterCondition; // SPLIT
 
+    public static BlockDto toDto(Block block) {
+        return BlockDto.builder()
+                .id(block.getId())
+                .type(block.getType())
+                .name(block.getName())
+                .description(block.getDescription())
+                .nextId(block.getNextId())
+                .x(block.getX())
+                .y(block.getY())
+                .freeBlockInfo(block.getFreeBlockInfo())
+                .selectBlock(block.getSelectBlock())
+                .formItem(block.getFormItem())
+                .messageBlockInfo(block.getMessageBlockInfo())
+                .quarterCondition(block.getQuarterCondition())
+                .build();
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/scenario")
@@ -24,12 +25,7 @@ public class ScenarioController {
     public ResponseEntity<?> createScenario(@RequestBody ScenarioDto.ScenarioCreateDto scenario) {
         try {
             // 시나리오 저장 로직
-            return ResponseEntity.ok(ScenarioDto.toSimpleDto(
-                            scenarioService.saveScenario(
-                                    ScenarioDto.fromCreateDto(scenario)
-                            )
-                    )
-            );
+            return ResponseEntity.ok(ScenarioDto.toSimpleDto(scenarioService.saveScenario(ScenarioDto.fromCreateDto(scenario))));
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error saving scenario: " + e.getMessage());
@@ -41,7 +37,10 @@ public class ScenarioController {
     @GetMapping
     public ResponseEntity<?> getAllScenarios() {
         try {
-            List<ScenarioDto.SimpleScenarioDto> scenarios = scenarioService.getAllScenarios();
+            List<ScenarioDto.SimpleScenarioDto> scenarios = scenarioService.getAllScenarios()
+                    .stream()
+                    .map(ScenarioDto::toSimpleDto)
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(scenarios);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error fetching scenarios: " + e.getMessage());
@@ -53,19 +52,7 @@ public class ScenarioController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateScenario(@PathVariable String id, @RequestBody ScenarioDto.ScenarioCreateDto updateDto) {
         try {
-            // 기존 시나리오 조회
-            Scenario existing = scenarioService.getScenarioById(id);
-
-
-            existing.setName(updateDto.getName());
-            existing.setKey(updateDto.getKey());
-            existing.setIsDraft(updateDto.getIsDraft());
-            existing.setVersion(updateDto.getVersion());
-            existing.setVersionDescription(updateDto.getVersionDescription());
-
-            Scenario updated = scenarioService.updateScenario(existing);
-
-            return ResponseEntity.ok(ScenarioDto.toSimpleDto(updated));
+            return ResponseEntity.ok(ScenarioDto.toSimpleDto(scenarioService.updateScenario(id, updateDto)));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error updating scenario: " + e.getMessage());
         }
@@ -76,12 +63,10 @@ public class ScenarioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteScenario(@PathVariable String id) {
         try {
-            Scenario scenario = scenarioService.getScenarioById(id); // 삭제할 대상 조회
-            scenarioService.deleteScenario(scenario);
+            scenarioService.deleteScenario(id);
             return ResponseEntity.ok("Scenario deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error deleting scenario: " + e.getMessage());
         }
     }
-
 }
