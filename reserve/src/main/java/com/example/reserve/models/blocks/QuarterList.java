@@ -12,6 +12,7 @@ import java.util.List;
 public class QuarterList {
     @Id
     private String id;
+    private String name;    // 분기 이름
 
     private String connectId; // 연결 ID
     @Builder.Default

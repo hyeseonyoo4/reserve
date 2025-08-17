@@ -34,11 +34,11 @@ public class Block {
     private SelectBlock selectBlock;
 
     //    FORM,
-    private FormItem formItem;
+    private InsertForm formInfo;
     //    MESSAGE,
     private MessageBlockInfo messageBlockInfo;
     //    SPLIT,
-    private QuarterCondition quarterCondition;
+    private Quarter quarterInfo;
 
     //    API,
 }

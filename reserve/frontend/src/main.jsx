@@ -2,7 +2,7 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import App from "./App"
-import ScenarioList from "./components/ScenarioList"
+import ScenarioList from "./components/ScenarioList.jsx"
 import EditorPage from "./components/EditorPage"
 import "./index.css"
 
