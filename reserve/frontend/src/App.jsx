@@ -25,13 +25,13 @@ export default function App() {
                 </Link>
             </header>
 
-            {/* React Flow 관련 훅/컴포넌트가 아래에 있으므로 Provider로 감쌈 */}
+
             <div style={{ position: "relative", minHeight: 0 }}>
                 <ReactFlowProvider>
                     <Outlet />
                 </ReactFlowProvider>
 
-                {/* 노드가 선택되면 우측 드로어 표시 (오버레이) */}
+
                 {selectedNode && (
                     <div
                         style={{

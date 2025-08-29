@@ -12,7 +12,7 @@ export default function EditorPage() {
     const setScenarioId = useStudioStore(s => s.setScenarioId);
     const open = useStudioStore(s => s.drawerOpen);
 
-    // 스토어에 있는 블록 추가 액션(이름이 다를 수 있어 유연하게 참조)
+
     const addBlock =
         useStudioStore(s => s.addBlock) ||
         useStudioStore(s => s.addBlockOfType) ||

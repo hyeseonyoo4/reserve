@@ -29,7 +29,7 @@ const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
     return acc;
 }, {});
 
-/** 새 노드 data 생성 (대소문자/공백 정규화) */
+
 const makeNodeDataByType = (rawKey) => {
     const KEY = String(rawKey || "").trim().toUpperCase();
     const label = LABEL_BY_KEY[KEY] ?? "블록";
@@ -38,7 +38,7 @@ const makeNodeDataByType = (rawKey) => {
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-/** 초기 예시 노드/엣지 */
+
 const initialNodes = [
     { id: "1", type: "custom", position: { x: 200, y: 100 }, data: { label: LABEL_BY_KEY.START, type: "start",  content: "시나리오 시작" } },
     { id: "2", type: "custom", position: { x: 200, y: 260 }, data: { label: "대화",             type: "dialog", content: "무엇을 도와드릴까요?" } },
@@ -80,7 +80,7 @@ export default function ReactFlowCanvas() {
 
     const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
 
-    /** 타입 선택 → 새 노드 생성 + 부모와 연결 + 드로어 자동 오픈 */
+
     const addNextNode = useCallback((parentId, typeKey) => {
         const childId = newId();
         let created = null;
@@ -106,13 +106,13 @@ export default function ReactFlowCanvas() {
         if (created) openDrawer(created); // 새로 만든 노드 상세 자동 오픈
     }, [openDrawer]);
 
-    /** 노드 삭제 (연결 엣지도 정리) */
+
     const removeNode = useCallback((nodeId) => {
         setNodes((nds) => nds.filter((n) => n.id !== nodeId));
         setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     }, []);
 
-    /** '추가' 클릭 → 부모와 새 노드 예상 위치의 중앙 좌표에 메뉴 표시 */
+
     const openTypeMenuAtMid = useCallback((parentId) => {
         const parent = nodes.find((n) => n.id === parentId);
         if (!parent) return;
@@ -133,7 +133,7 @@ export default function ReactFlowCanvas() {
     // 팬/줌 변하면 메뉴 닫기(좌표 어긋남 방지)
     useEffect(() => { setTypeMenu(null); }, [vx, vy, zoom]);
 
-    /** 각 노드 data에 핸들러 주입 */
+
     const nodesWithHandlers = useMemo(
         () =>
             nodes.map((n) => ({
@@ -153,7 +153,7 @@ export default function ReactFlowCanvas() {
         [nodes, openTypeMenuAtMid, addNextNode, removeNode]
     );
 
-    /** 메뉴에서 타입 선택 */
+
     const pickType = (typeKey) => {
         if (!typeMenu) return;
         addNextNode(typeMenu.parentId, typeKey);
