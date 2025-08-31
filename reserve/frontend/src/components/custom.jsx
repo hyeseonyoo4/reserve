@@ -65,7 +65,7 @@ export function CustomNode({ id, data, selected }) {
                 )}
             </div>
 
-            {/* 푸터 → 추가 / 삭제 */}
+
             <div
                 style={{
                     display: "flex",
