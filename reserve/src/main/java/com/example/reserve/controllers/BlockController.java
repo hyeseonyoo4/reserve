@@ -2,6 +2,8 @@ package com.example.reserve.controllers;
 
 import com.example.reserve.dtos.AdminDto;
 import com.example.reserve.dtos.BlockDto;
+import com.example.reserve.dtos.common.ResultEntity;
+import com.example.reserve.dtos.common.ResultList;
 import com.example.reserve.models.User;
 import com.example.reserve.services.BlockService;
 import com.example.reserve.types.BlockType;
@@ -32,10 +34,10 @@ public class BlockController {
 
     // 시나리오별 조회
     @GetMapping("/scenario/{scenarioId}")
-    public List<BlockDto> getBlocksByScenario(@PathVariable String scenarioId) {
-        return blockService.getBlocksByScenario(scenarioId).stream()
+    public ResultEntity<?> getBlocksByScenario(@PathVariable String scenarioId) {
+        return ResultEntity.ok(new ResultList<>(blockService.getBlocksByScenario(scenarioId).stream()
                 .map(BlockDto::toDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())));
     }
 
     // 생성

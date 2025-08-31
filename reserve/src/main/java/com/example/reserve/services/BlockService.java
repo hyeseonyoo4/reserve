@@ -73,13 +73,13 @@ public class BlockService {
                 block.setSelectBlock(blockDto.getSelectBlock());
                 break;
             case FORM:
-                block.setFormItem(blockDto.getFormItem());
+                block.setFormInfo(blockDto.getFormInfo());
                 break;
             case MESSAGE:
                 block.setMessageBlockInfo(blockDto.getMessageBlockInfo());
                 break;
             case SPLIT:
-                block.setQuarterCondition(blockDto.getQuarterCondition());
+                block.setQuarterInfo(blockDto.getQuarterInfo());
                 break;
             case API:
                 // TODO: API 블록에 대한 처리 로직 추가 필요

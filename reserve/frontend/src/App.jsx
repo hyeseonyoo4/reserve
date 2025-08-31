@@ -6,8 +6,6 @@ import RightDrawer from "./components/RightDrawer";
 import { useStudioStore } from "./store";
 
 export default function App() {
-    const selectedNode = useStudioStore((s) => s.selectedNode);
-
     return (
         <div style={{ height: "100vh", display: "grid", gridTemplateRows: "56px 1fr" }}>
             <header
@@ -30,23 +28,6 @@ export default function App() {
                 <ReactFlowProvider>
                     <Outlet />
                 </ReactFlowProvider>
-
-
-                {selectedNode && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: 360,
-                            background: "#fff",
-                            zIndex: 100,
-                        }}
-                    >
-                        <RightDrawer width={360} />
-                    </div>
-                )}
             </div>
         </div>
     );

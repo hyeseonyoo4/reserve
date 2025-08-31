@@ -4,6 +4,7 @@ import { useStudioStore } from "../store";
 import FlowCanvas from "./FlowCanvas.jsx";
 import RightDrawer from "../components/RightDrawer";
 import Sidebar from "./Sidebar.jsx";
+import axiosInstance from "../utils/axios.js";
 
 const BLOCK_TYPES = ["START","SELECT","FORM","FREE","API","SPLIT","MESSAGE","END"];
 const KOR = { START:"시작", SELECT:"선택", FORM:"폼입력", FREE:"자유", API:"API", SPLIT:"분기", MESSAGE:"메시지", END:"끝" };
@@ -77,12 +78,26 @@ export default function EditorPage() {
                         </div>
 
                         {/* 실제 캔버스 */}
-                        <FlowCanvas />
+                        <FlowCanvas scenarioId={scenarioId} />
                     </div>
                 </div>
             </div>
 
-            {open && <RightDrawer width={360} />}
+            {open &&
+                <div
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: 360,
+                        background: "#fff",
+                        zIndex: 100,
+                    }}
+                >
+                    <RightDrawer width={360} />
+                </div>
+            }
         </div>
     );
 }

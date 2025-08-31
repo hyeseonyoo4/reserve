@@ -3,6 +3,8 @@ package com.example.reserve.controllers;
 import com.example.reserve.dtos.AdminDto;
 import com.example.reserve.dtos.ManagerDto;
 import com.example.reserve.dtos.ScenarioDto;
+import com.example.reserve.dtos.common.ResultEntity;
+import com.example.reserve.dtos.common.ResultList;
 import com.example.reserve.models.Scenario;
 import com.example.reserve.services.ScenarioService;
 import org.springframework.http.ResponseEntity;
@@ -35,18 +37,17 @@ public class ScenarioController {
 
     // 시나리오 전체 조회
     @GetMapping
-    public ResponseEntity<?> getAllScenarios() {
+    public ResultEntity<?> getAllScenarios() {
         try {
             List<ScenarioDto.SimpleScenarioDto> scenarios = scenarioService.getAllScenarios()
                     .stream()
                     .map(ScenarioDto::toSimpleDto)
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(scenarios);
+            return ResultEntity.ok(new ResultList<>(scenarios));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error fetching scenarios: " + e.getMessage());
+            return new ResultEntity<>().fail("Error fetching scenarios: " + e.getMessage());
         }
     }
-
 
     // 시나리오 수정
     @PutMapping("/{id}")

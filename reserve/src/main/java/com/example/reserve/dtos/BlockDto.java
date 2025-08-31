@@ -29,9 +29,9 @@ public class BlockDto {
     // 타입별 payload
     private FreeBlockInfo freeBlockInfo;       // FREE
     private SelectBlock selectBlock;           // SELECT
-    private FormItem formItem;                 // FORM
+    private InsertForm formInfo;               // FORM
     private MessageBlockInfo messageBlockInfo; // MESSAGE
-    private QuarterCondition quarterCondition; // SPLIT
+    private Quarter quarterInfo;               // SPLIT
 
     public static BlockDto toDto(Block block) {
         return BlockDto.builder()
@@ -44,9 +44,9 @@ public class BlockDto {
                 .y(block.getY())
                 .freeBlockInfo(block.getFreeBlockInfo())
                 .selectBlock(block.getSelectBlock())
-                .formItem(block.getFormItem())
+                .formInfo(block.getFormInfo())
                 .messageBlockInfo(block.getMessageBlockInfo())
-                .quarterCondition(block.getQuarterCondition())
+                .quarterInfo(block.getQuarterInfo())
                 .build();
     }
 }
