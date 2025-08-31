@@ -53,11 +53,12 @@ const initialEdges = [
 ];
 
 export default function ReactFlowCanvas() {
-    const wrapRef = useRef(null);
+    const reactFlowWrapper = useRef(null);
     const [nodes, setNodes] = useState(initialNodes);
     const [edges, setEdges] = useState(initialEdges);
     // { parentId, left, top } 또는 null — 노드 사이 중앙에 띄울 메뉴 좌표
     const [typeMenu, setTypeMenu] = useState(null);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null)
 
     const openDrawer = useStudioStore((s) => s.openDrawer);
     const { x: vx, y: vy, zoom } = useViewport();
@@ -74,6 +75,58 @@ export default function ReactFlowCanvas() {
         (params) => setEdges((eds) => addEdge(params, eds)),
         []
     );
+
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault()
+
+            console.log("onDrop", event)
+
+            const type = event.dataTransfer.getData("application/reactflow")
+
+            if (typeof type === "undefined" || !type) {
+                return
+            }
+
+            console.log("reactFlowInstance", reactFlowInstance)
+            console.log("reactFlowWrapper", reactFlowWrapper)
+
+            const getNodeLabel = (typeKey) => {
+                const KEY = String(typeKey || "").trim().toUpperCase();
+                return LABEL_BY_KEY[KEY] ?? "블록";
+            };
+            const getNodeContent = (typeKey) => {
+                const KEY = String(typeKey || "").trim().toUpperCase();
+                if (KEY === "START") return "시나리오 시작";
+                if (KEY === "END")   return "시나리오 종료";
+                return "";
+            };
+
+            if (reactFlowWrapper.current && reactFlowInstance) {
+                const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect()
+                const position = reactFlowInstance.screenToFlowPosition({
+                    x: event.clientX - reactFlowBounds.left,
+                    y: event.clientY - reactFlowBounds.top,
+                })
+
+                const newNode = {
+                    id: `${nodes.length + 1}`,
+                    type: "custom",
+                    position,
+                    data: {
+                        label: getNodeLabel(type),
+                        type: type,
+                        content: getNodeContent(type),
+                    },
+                }
+
+                console.log("newNode", newNode)
+
+                setNodes((nds) => nds.concat(newNode))
+            }
+        },
+        [reactFlowInstance, nodes.length, setNodes],
+    )
 
     // 단일 클릭으로도 드로어 열리게
     const onNodeClick = useCallback((_, node) => openDrawer(node), [openDrawer]);
@@ -162,13 +215,14 @@ export default function ReactFlowCanvas() {
 
     return (
         <div
-            ref={wrapRef}
+            ref={reactFlowWrapper}
             style={{ position: "relative", width: "100%", height: "calc(100% - 40px)" }}
         >
             <ReactFlow
                 nodes={nodesWithHandlers}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                onInit={setReactFlowInstance}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
@@ -176,6 +230,7 @@ export default function ReactFlowCanvas() {
                 onDragOver={onDragOver}
                 fitView
                 style={{ background: "#f9fafb" }}
+                onDrop={onDrop}
             >
                 <Controls />
                 <MiniMap />

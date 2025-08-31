@@ -27,7 +27,7 @@ export default function Sidebar() {
     return (
         <aside style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, borderRight: "1px solid #e5e7eb", background: "#f3f4f6", width: "160px" }}>
             <div style={{ fontWeight: 700, marginBottom: 4 }}>블록 추가</div>
-            <Item type="dialog" label="대화" />
+            <Item type="dialog" label="대화"  />
             <Item type="branch" label="분기" />
             <Item type="timer" label="타이머" />
             <Item type="complete" label="완료" />
