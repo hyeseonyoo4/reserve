@@ -135,7 +135,7 @@ export default function ReactFlowCanvas({scenarioId}) {
                 id: childId,
                 type: "custom",
                 position: { x: parent.position.x + 320, y: parent.position.y }, // 오른쪽에 배치
-                data: makeNodeDataByType(typeKey),//타입키를 대문자로 정규화
+                data: makeNodeDataByType(typeKey),
             };
             created = newNode;
             return [...nds, newNode];
