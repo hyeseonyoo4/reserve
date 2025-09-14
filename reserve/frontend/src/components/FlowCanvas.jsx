@@ -8,7 +8,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useStudioStore } from "../store";
 import { CustomNode } from "./custom";
-import {convertBlockToNodeEdge, sampleBlocks} from "./sample.jsx";
+import { convertBlockToNodeEdge, sampleBlocks } from "./sample.jsx";
 import axiosInstance from "../utils/axios.js";
 
 const nodeTypes = { custom: CustomNode };
@@ -18,7 +18,7 @@ export const BLOCK_TYPES = [
     { key: "START",   label: "시작" },
     { key: "SELECT",  label: "선택" },
     { key: "FORM",    label: "폼입력" },
-    { key: "FREE",    label: "자유폼" },   // FREE → "자유폼"
+    { key: "FREE",    label: "자유폼" },
     { key: "API",     label: "API" },
     { key: "SPLIT",   label: "분기" },
     { key: "MESSAGE", label: "메시지" },
@@ -31,7 +31,6 @@ const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
     return acc;
 }, {});
 
-
 const makeNodeDataByType = (rawKey) => {
     const KEY = String(rawKey || "").trim().toUpperCase();
     const label = LABEL_BY_KEY[KEY] ?? "블록";
@@ -40,13 +39,13 @@ const makeNodeDataByType = (rawKey) => {
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-export default function ReactFlowCanvas({scenarioId}) {
+export default function ReactFlowCanvas({ scenarioId }) {
     const reactFlowWrapper = useRef(null);
     const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
-    // { parentId, left, top } 또는 null — 노드 사이 중앙에 띄울 메뉴 좌표
     const [typeMenu, setTypeMenu] = useState(null);
-    const [reactFlowInstance, setReactFlowInstance] = useState(null)
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [saving, setSaving] = useState(false);
 
     const openDrawer = useStudioStore((s) => s.openDrawer);
     const { x: vx, y: vy, zoom } = useViewport();
@@ -64,39 +63,30 @@ export default function ReactFlowCanvas({scenarioId}) {
         []
     );
 
+    // DnD로 노드 추가
     const onDrop = useCallback(
         (event) => {
-            event.preventDefault()
-
-            console.log("onDrop", event)
-
-            const type = event.dataTransfer.getData("application/reactflow")
-
-            if (typeof type === "undefined" || !type) {
-                return
-            }
-
-            console.log("reactFlowInstance", reactFlowInstance)
-            console.log("reactFlowWrapper", reactFlowWrapper)
+            event.preventDefault();
+            const type = event.dataTransfer.getData("application/reactflow");
+            if (typeof type === "undefined" || !type) return;
 
             const getNodeLabel = (typeKey) => {
                 const KEY = String(typeKey || "").trim().toUpperCase();
-                console.log("getNodeLabel", KEY)
                 return LABEL_BY_KEY[KEY] ?? "블록";
             };
             const getNodeContent = (typeKey) => {
                 const KEY = String(typeKey || "").trim().toUpperCase();
                 if (KEY === "START") return "시나리오 시작";
-                if (KEY === "END")   return "시나리오 종료";
+                if (KEY === "END") return "시나리오 종료";
                 return "";
             };
 
             if (reactFlowWrapper.current && reactFlowInstance) {
-                const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect()
+                const bounds = reactFlowWrapper.current.getBoundingClientRect();
                 const position = reactFlowInstance.screenToFlowPosition({
-                    x: event.clientX - reactFlowBounds.left,
-                    y: event.clientY - reactFlowBounds.top,
-                })
+                    x: event.clientX - bounds.left,
+                    y: event.clientY - bounds.top,
+                });
 
                 const newNode = {
                     id: `${nodes.length + 1}`,
@@ -107,21 +97,16 @@ export default function ReactFlowCanvas({scenarioId}) {
                         type: type,
                         content: getNodeContent(type),
                     },
-                }
+                };
 
-                console.log("newNode", newNode)
-
-                setNodes((nds) => nds.concat(newNode))
+                setNodes((nds) => nds.concat(newNode));
             }
         },
-        [reactFlowInstance, nodes.length, setNodes],
-    )
+        [reactFlowInstance, nodes.length, setNodes]
+    );
 
-    // 단일 클릭으로도 드로어 열리게
     const onNodeClick = useCallback((_, node) => openDrawer(node), [openDrawer]);
-
     const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
-
 
     const addNextNode = useCallback((parentId, typeKey) => {
         const childId = newId();
@@ -134,7 +119,7 @@ export default function ReactFlowCanvas({scenarioId}) {
             const newNode = {
                 id: childId,
                 type: "custom",
-                position: { x: parent.position.x + 320, y: parent.position.y }, // 오른쪽에 배치
+                position: { x: parent.position.x + 320, y: parent.position.y },
                 data: makeNodeDataByType(typeKey),
             };
             created = newNode;
@@ -145,15 +130,13 @@ export default function ReactFlowCanvas({scenarioId}) {
             addEdge({ id: `${parentId}->${childId}`, source: parentId, target: childId }, eds)
         );
 
-        if (created) openDrawer(created); // 새로 만든 노드 상세 자동 오픈
+        if (created) openDrawer(created);
     }, [openDrawer]);
-
 
     const removeNode = useCallback((nodeId) => {
         setNodes((nds) => nds.filter((n) => n.id !== nodeId));
         setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     }, []);
-
 
     const openTypeMenuAtMid = useCallback((parentId) => {
         const parent = nodes.find((n) => n.id === parentId);
@@ -161,34 +144,72 @@ export default function ReactFlowCanvas({scenarioId}) {
 
         const newX = parent.position.x + 320;
         const newY = parent.position.y;
-
         const midFlowX = (parent.position.x + newX) / 2;
         const midFlowY = (parent.position.y + newY) / 2;
 
-        // flow 좌표 → 화면 기준 px
         const left = midFlowX * zoom + vx;
         const top  = midFlowY * zoom + vy;
 
         setTypeMenu({ parentId, left, top });
     }, [nodes, vx, vy, zoom]);
 
-    // 팬/줌 변하면 메뉴 닫기(좌표 어긋남 방지)
     useEffect(() => { setTypeMenu(null); }, [vx, vy, zoom]);
 
+    // 시나리오 데이터 불러오기 (Blocks → nodes/edges)
     useEffect(() => {
         axiosInstance.get(`/api/v1/blocks/scenario/${scenarioId}`).then(
             (res) => {
-                if(res.data.code === "0000") {
+                if (res.data.code === "0000") {
                     const elements = res.data.data.elements ?? [];
                     const { nodes: loadedNodes, edges: loadedEdges } = convertBlockToNodeEdge(elements);
-                    // const {nodes: loadedNodes, edges: loadedEdges} = convertBlockToNodeEdge(sampleBlocks)
                     setNodes(loadedNodes);
                     setEdges(loadedEdges);
                 }
             }
-        )
+        );
     }, [scenarioId]);
 
+    // 저장 핸들러: nodes/edges → Blocks로 변환 후 전송
+    const onSave = useCallback(async () => {
+        try {
+            setSaving(true);
+            const blocks = convertNodesEdgesToBlocks(nodes, edges);
+
+            // 백엔드가 GET에서 data.elements를 주므로, POST도 elements로 보냄
+            // (필요 시 컨트롤러 규약에 맞게 'blocks'로 변경)
+            const payload = { elements: blocks };
+
+            const res = await axiosInstance.post(
+                `/api/v1/blocks/scenario/${scenarioId}`,
+                payload
+            );
+
+            if (res?.data?.code === "0000") {
+                alert("저장 완료!");
+            } else {
+                alert("저장 응답이 비정상입니다.");
+                console.warn("save response", res?.data);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("저장 실패");
+        } finally {
+            setSaving(false);
+        }
+    }, [nodes, edges, scenarioId]);
+
+    // CTRL/CMD + S 핫키로 저장
+    useEffect(() => {
+        const handler = (e) => {
+            const isMac = navigator.platform.toUpperCase().includes("MAC");
+            if ((isMac && e.metaKey && e.key === "s") || (!isMac && e.ctrlKey && e.key === "s")) {
+                e.preventDefault();
+                onSave();
+            }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [onSave]);
 
     const nodesWithHandlers = useMemo(
         () =>
@@ -196,19 +217,16 @@ export default function ReactFlowCanvas({scenarioId}) {
                 ...n,
                 data: {
                     ...n.data,
-                    // 구버전 'onAdd(id)' 호출도 지원: typeKey 없으면 메뉴만 연다
                     onAdd: (parentId, typeKey) => {
                         if (!typeKey) return openTypeMenuAtMid(parentId);
                         return addNextNode(parentId, typeKey);
                     },
-                    // 별도 메뉴 트리거를 쓰는 경우
                     onAddClick: (parentId) => openTypeMenuAtMid(parentId),
                     onDelete: removeNode,
                 },
             })),
         [nodes, openTypeMenuAtMid, addNextNode, removeNode]
     );
-
 
     const pickType = (typeKey) => {
         if (!typeMenu) return;
@@ -221,6 +239,25 @@ export default function ReactFlowCanvas({scenarioId}) {
             ref={reactFlowWrapper}
             style={{ position: "relative", width: "100%", height: "calc(100% - 40px)" }}
         >
+            {/* 상단 우측 저장 버튼 */}
+            <div style={{ position: "absolute", right: 12, top: 8, zIndex: 1100, display: "flex", gap: 8 }}>
+                <button
+                    onClick={onSave}
+                    disabled={saving}
+                    style={{
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        border: "1px solid #e5e7eb",
+                        background: saving ? "#f1f5f9" : "#fff",
+                        cursor: saving ? "not-allowed" : "pointer",
+                        boxShadow: "0 6px 16px rgba(0,0,0,.08)",
+                    }}
+                    title="Ctrl/Cmd + S"
+                >
+                    {saving ? "저장중..." : "저장"}
+                </button>
+            </div>
+
             <ReactFlow
                 nodes={nodesWithHandlers}
                 edges={edges}
@@ -293,4 +330,63 @@ export default function ReactFlowCanvas({scenarioId}) {
             )}
         </div>
     );
+}
+
+
+   //nodes/edges → Block 구조 변환
+
+export function convertNodesEdgesToBlocks(nodes = [], edges = []) {
+    const outgoingBySource = new Map();
+    for (const e of edges) {
+        if (!outgoingBySource.has(e.source)) outgoingBySource.set(e.source, []);
+        outgoingBySource.get(e.source).push(e);
+    }
+
+    const get = (obj, path, fallback = undefined) => {
+        try {
+            return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj) ?? fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
+    return nodes.map((n) => {
+        // data.type이 소문자일 수 있으니 대문자로 정규화
+        const rawType = get(n, "data.type") || n.type;
+        const type = typeof rawType === "string" ? rawType.toUpperCase() : "FREE";
+
+        const block = {
+            id: n.id,
+            type,                                   // START | SELECT | FORM | FREE | API | SPLIT | MESSAGE | END
+            name: get(n, "data.label", ""),
+            description: get(n, "data.content", ""),
+            x: get(n, "position.x", 0),
+            y: get(n, "position.y", 0),
+
+        };
+
+        const outs = outgoingBySource.get(n.id) || [];
+
+        if (type === "SPLIT") {
+
+            block.quarters = outs.map((e, idx) => ({
+                connectedId: e.target,
+                name:
+                    get(e, "data.label") ||
+                    get(e, "data.name") ||
+                    e.sourceHandle ||
+                    `branch${idx + 1}`,
+            }));
+        } else if (type !== "END") {
+
+            const nextEdge =
+                outs.find((e) => get(e, "data.isDefault") === true) ||
+                outs.find((e) => e.sourceHandle === "default") ||
+                outs[0];
+            if (nextEdge) block.nextId = nextEdge.target;
+        }
+
+
+        return block;
+    });
 }
