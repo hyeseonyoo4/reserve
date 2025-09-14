@@ -40,39 +40,53 @@ public class BlockController {
                 .collect(Collectors.toList())));
     }
 
-    // 생성
+    // 일괄 저장
     @PostMapping("/scenario/{scenarioId}")
-    public ResponseEntity<BlockDto> createBlock(
-            @PathVariable String scenarioId,
-            @RequestParam BlockType type,
-            @RequestParam String name,
-            @RequestParam Double x,
-            @RequestParam Double y){
-        return ResponseEntity.ok(BlockDto.toDto(blockService.createBlock(scenarioId, type, name, x, y)));
+    public ResultEntity<?> updateBlocks(@PathVariable String scenarioId,
+                                        @RequestBody List<BlockDto> blocks) {
+        try {
+            return ResultEntity.ok(new ResultList<>(blockService.updateBlocks(scenarioId, blocks)
+                    .stream()
+                    .map(BlockDto::toDto)
+                    .toList()));
+        } catch (Exception e) {
+            return new ResultEntity<>().fail("Error updating blocks: " + e.getMessage());
+        }
     }
-    //  수정
-    @PutMapping("/scenario/{scenarioId}/{id}")
-    public ResponseEntity<BlockDto> updateBlock(
-            @PathVariable String scenarioId,
-            @PathVariable String id,
-            @RequestBody BlockDto blockDto
-            ) {
-        return ResponseEntity.ok(BlockDto.toDto(blockService.updateBlock(scenarioId, id, blockDto)));
-    }
-    // 삭제
-    @DeleteMapping("/scenario/{scenarioId}/{id}")
-    public ResponseEntity<Void> deleteBlock(
-            @PathVariable String scenarioId,
-            @PathVariable String id,
-            HttpSession session) {
 
-//        User loginUser = (User) session.getAttribute("loginUser");
+//    // 생성
+//    @PostMapping("/scenario/{scenarioId}")
+//    public ResponseEntity<BlockDto> createBlock(
+//            @PathVariable String scenarioId,
+//            @RequestParam BlockType type,
+//            @RequestParam String name,
+//            @RequestParam Double x,
+//            @RequestParam Double y){
+//        return ResponseEntity.ok(BlockDto.toDto(blockService.createBlock(scenarioId, type, name, x, y)));
+//    }
+//    //  수정
+//    @PutMapping("/scenario/{scenarioId}/{id}")
+//    public ResponseEntity<BlockDto> updateBlock(
+//            @PathVariable String scenarioId,
+//            @PathVariable String id,
+//            @RequestBody BlockDto blockDto
+//            ) {
+//        return ResponseEntity.ok(BlockDto.toDto(blockService.updateBlock(scenarioId, id, blockDto)));
+//    }
+//    // 삭제
+//    @DeleteMapping("/scenario/{scenarioId}/{id}")
+//    public ResponseEntity<Void> deleteBlock(
+//            @PathVariable String scenarioId,
+//            @PathVariable String id,
+//            HttpSession session) {
 //
-//        if (loginUser == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-//        }
-
-        blockService.deleteBlock(scenarioId, id);
-        return ResponseEntity.noContent().build();
-    }
+////        User loginUser = (User) session.getAttribute("loginUser");
+////
+////        if (loginUser == null) {
+////            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+////        }
+//
+//        blockService.deleteBlock(scenarioId, id);
+//        return ResponseEntity.noContent().build();
+//    }
 }

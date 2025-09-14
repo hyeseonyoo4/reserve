@@ -1,19 +1,13 @@
 package com.example.reserve.services;
 
-import com.example.reserve.dtos.AdminDto;
 import com.example.reserve.dtos.BlockDto;
-import com.example.reserve.models.Admin;
-import com.example.reserve.models.Company;
 import com.example.reserve.models.Scenario;
-import com.example.reserve.models.User;
 import com.example.reserve.models.blocks.Block;
-import com.example.reserve.repositories.BlockRepository;
 import com.example.reserve.types.BlockType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class BlockService {
@@ -28,6 +22,19 @@ public class BlockService {
         return scenario.getBlocks();
     }
 
+    public List<Block> updateBlocks(String scenarioId, List<BlockDto> blockDtos) {
+        Scenario scenario = scenarioService.getScenarioById(scenarioId);
+
+        List<Block> blocks = blockDtos.stream()
+                .map(BlockDto::toEntity)
+                .toList();
+        scenario.setBlocks(blocks);
+//        scenarioService.saveScenario(scenario);
+        scenarioService.saveScenario(scenario);
+
+        return blocks;
+    }
+
     //  추가
     public Block createBlock(String scenarioId, BlockType type, String name, Double x, Double y) {
         Scenario scenario = scenarioService.getScenarioById(scenarioId);
@@ -40,7 +47,7 @@ public class BlockService {
                 .build();
         scenario.getBlocks().add(block);
 
-        scenarioService.saveScenario(scenario);
+        scenarioService.createScenario(scenario);
 
         // TODO: 실제로 Block이 저장된 후에 ID가 할당되어있는지 확인 필요
         return block;
@@ -92,7 +99,7 @@ public class BlockService {
                 throw new RuntimeException("Unsupported block type");
         }
 
-        scenarioService.saveScenario(scenario);
+        scenarioService.createScenario(scenario);
         return block;
     }
     // 삭제
@@ -104,6 +111,6 @@ public class BlockService {
                 .orElseThrow(() -> new RuntimeException("Block not found"));
 
         scenario.getBlocks().remove(block);
-        scenarioService.saveScenario(scenario);
+        scenarioService.createScenario(scenario);
     }
 }

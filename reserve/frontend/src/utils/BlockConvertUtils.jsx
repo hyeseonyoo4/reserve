@@ -74,14 +74,18 @@ export const convertBlockToNodeEdge = (blocks) => {
                 id: `e${block.id}-${block.quarterInfo.defaultConnectId}`,
                 source: block.id,
                 target: block.quarterInfo.defaultConnectId,
-                label: "기본연결"
+                type: "editable",
+                label: "기본연결",
+                data: { label: "기본연결" }
             })
             block.quarterInfo.quarters.forEach(quarter => {
                 edges.push({
                     id: `e${block.id}-${quarter.connectId}`,
                     source: block.id,
                     target: quarter.connectId,
-                    label: quarter.name || "분기"
+                    label: quarter.name || "분기",
+                    type: "editable",
+                    data: { label: quarter.name ?? null }
                 })
             })
         }
@@ -89,6 +93,61 @@ export const convertBlockToNodeEdge = (blocks) => {
     return { nodes, edges };
 };
 
+export function convertNodesEdgesToBlocks(nodes = [], edges = []) {
+    const outgoingBySource = new Map();
+    for (const e of edges) {
+        if (!outgoingBySource.has(e.source)) outgoingBySource.set(e.source, []);
+        outgoingBySource.get(e.source).push(e);
+    }
+
+    const get = (obj, path, fallback = undefined) => {
+        try {
+            return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj) ?? fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
+    return nodes.map((n) => {
+        // data.type이 소문자일 수 있으니 대문자로 정규화
+        const rawType = get(n, "data.type") || n.type;
+        const type = typeof rawType === "string" ? rawType.toUpperCase() : "FREE";
+
+        const block = {
+            id: n.id,
+            type,                                   // START | SELECT | FORM | FREE | API | SPLIT | MESSAGE | END
+            name: get(n, "data.label", ""),
+            description: get(n, "data.content", ""),
+            x: get(n, "position.x", 0),
+            y: get(n, "position.y", 0),
+
+        };
+
+        const outs = outgoingBySource.get(n.id) || [];
+
+        if (type === "SPLIT") {
+            block.quarterInfo = { defaultConnectId: null, quarters: [] };
+            block.quarterInfo.quarters = outs.map((e, idx) => ({
+                connectId: e.target,
+                name:
+                    get(e, "data.label") ||
+                    get(e, "data.name") ||
+                    e.sourceHandle ||
+                    `branch${idx + 1}`,
+            }));
+        } else if (type !== "END") {
+
+            const nextEdge =
+                outs.find((e) => get(e, "data.isDefault") === true) ||
+                outs.find((e) => e.sourceHandle === "default") ||
+                outs[0];
+            if (nextEdge) block.nextId = nextEdge.target;
+        }
+
+
+        return block;
+    });
+}
 
 // block 데이터를 바탕으로 노드와 엣지 생성
 const blockNodes = [

@@ -1,20 +1,14 @@
 package com.example.reserve.services;
 
 import com.example.reserve.dtos.ScenarioDto;
-import com.example.reserve.models.Company;
 import com.example.reserve.models.Scenario;
-import com.example.reserve.models.User;
 import com.example.reserve.models.blocks.Block;
-import com.example.reserve.repositories.CompanyRepository;
 import com.example.reserve.repositories.ScenarioRepository;
-import com.example.reserve.repositories.UserRepository;
 import com.example.reserve.types.BlockType;
-import com.example.reserve.types.Role;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ScenarioService {
@@ -24,7 +18,7 @@ public class ScenarioService {
         this.scenarioRepository = scenarioRepository;
     }
 
-    public Scenario saveScenario(Scenario scenario) {
+    public Scenario createScenario(Scenario scenario) {
         // TODO: 이름 중복 확인
         scenario.getBlocks().add(
                 Block.builder()
@@ -36,6 +30,10 @@ public class ScenarioService {
                         .build()
         );
         return scenarioRepository.save(scenario);
+    }
+
+    public void saveScenario(Scenario scenario) {
+        scenarioRepository.save(scenario);
     }
     // 💡 ID로 조회
     public Scenario getScenarioById(String id) {

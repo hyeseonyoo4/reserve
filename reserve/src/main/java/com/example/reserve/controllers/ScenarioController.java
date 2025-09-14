@@ -1,11 +1,8 @@
 package com.example.reserve.controllers;
 
-import com.example.reserve.dtos.AdminDto;
-import com.example.reserve.dtos.ManagerDto;
 import com.example.reserve.dtos.ScenarioDto;
 import com.example.reserve.dtos.common.ResultEntity;
 import com.example.reserve.dtos.common.ResultList;
-import com.example.reserve.models.Scenario;
 import com.example.reserve.services.ScenarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +24,7 @@ public class ScenarioController {
     public ResponseEntity<?> createScenario(@RequestBody ScenarioDto.ScenarioCreateDto scenario) {
         try {
             // 시나리오 저장 로직
-            return ResponseEntity.ok(ScenarioDto.toSimpleDto(scenarioService.saveScenario(ScenarioDto.fromCreateDto(scenario))));
+            return ResponseEntity.ok(ScenarioDto.toSimpleDto(scenarioService.createScenario(ScenarioDto.fromCreateDto(scenario))));
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error saving scenario: " + e.getMessage());

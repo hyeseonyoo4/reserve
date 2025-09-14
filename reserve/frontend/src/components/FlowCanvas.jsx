@@ -7,11 +7,20 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useStudioStore } from "../store";
-import { CustomNode } from "./custom";
-import { convertBlockToNodeEdge, sampleBlocks } from "./sample.jsx";
+import { CustomNode } from "./node/custom.jsx";
+import {
+    convertBlockToNodeEdge,
+    convertNodesEdgesToBlocks,
+    sampleBlocks
+} from "../utils/BlockConvertUtils.jsx";
 import axiosInstance from "../utils/axios.js";
 
+import EditableEdge from './edge/EditableEdge.jsx';
+
 const nodeTypes = { custom: CustomNode };
+const edgeTypes = {
+    editable: EditableEdge,
+};
 
 /** 메뉴에 표시할 타입 목록 */
 export const BLOCK_TYPES = [
@@ -59,8 +68,20 @@ export default function ReactFlowCanvas({ scenarioId }) {
         []
     );
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
-        []
+        (params) => {
+            console.log(params);
+            if(nodes.find(n => n.id === params.target)?.data.type === 'START') {
+                alert("시작 노드로 연결할 수 없습니다.");
+                return;
+            }
+            if(nodes.find(x => x.id === params.source)?.data.type === "SPLIT") {
+                console.log("ddddd");
+                params.type = 'editable';
+                params.data = { label: null };
+            }
+            setEdges((eds) => addEdge(params, eds))
+        },
+        [nodes]
     );
 
     // DnD로 노드 추가
@@ -177,7 +198,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
 
             // 백엔드가 GET에서 data.elements를 주므로, POST도 elements로 보냄
             // (필요 시 컨트롤러 규약에 맞게 'blocks'로 변경)
-            const payload = { elements: blocks };
+            const payload = [...blocks];
 
             const res = await axiosInstance.post(
                 `/api/v1/blocks/scenario/${scenarioId}`,
@@ -262,6 +283,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
                 nodes={nodesWithHandlers}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onInit={setReactFlowInstance}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
@@ -335,58 +357,4 @@ export default function ReactFlowCanvas({ scenarioId }) {
 
    //nodes/edges → Block 구조 변환
 
-export function convertNodesEdgesToBlocks(nodes = [], edges = []) {
-    const outgoingBySource = new Map();
-    for (const e of edges) {
-        if (!outgoingBySource.has(e.source)) outgoingBySource.set(e.source, []);
-        outgoingBySource.get(e.source).push(e);
-    }
 
-    const get = (obj, path, fallback = undefined) => {
-        try {
-            return path.split(".").reduce((o, k) => (o == null ? o : o[k]), obj) ?? fallback;
-        } catch {
-            return fallback;
-        }
-    };
-
-    return nodes.map((n) => {
-        // data.type이 소문자일 수 있으니 대문자로 정규화
-        const rawType = get(n, "data.type") || n.type;
-        const type = typeof rawType === "string" ? rawType.toUpperCase() : "FREE";
-
-        const block = {
-            id: n.id,
-            type,                                   // START | SELECT | FORM | FREE | API | SPLIT | MESSAGE | END
-            name: get(n, "data.label", ""),
-            description: get(n, "data.content", ""),
-            x: get(n, "position.x", 0),
-            y: get(n, "position.y", 0),
-
-        };
-
-        const outs = outgoingBySource.get(n.id) || [];
-
-        if (type === "SPLIT") {
-
-            block.quarters = outs.map((e, idx) => ({
-                connectedId: e.target,
-                name:
-                    get(e, "data.label") ||
-                    get(e, "data.name") ||
-                    e.sourceHandle ||
-                    `branch${idx + 1}`,
-            }));
-        } else if (type !== "END") {
-
-            const nextEdge =
-                outs.find((e) => get(e, "data.isDefault") === true) ||
-                outs.find((e) => e.sourceHandle === "default") ||
-                outs[0];
-            if (nextEdge) block.nextId = nextEdge.target;
-        }
-
-
-        return block;
-    });
-}
