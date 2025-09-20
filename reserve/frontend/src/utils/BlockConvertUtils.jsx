@@ -50,48 +50,68 @@ export const sampleBlocks = [
     }
 ]
 
-export const convertBlockToNodeEdge = (blocks) => {
-    const nodes = blocks.map(block => {
+// 타입 정규화 유틸
+const normalizeKey = (v) => String(v ?? "").trim().toUpperCase();
+const toNodeType = (v) => normalizeKey(v).toLowerCase(); // reactflow node.type 용
+
+export const convertBlockToNodeEdge = (blocks = []) => {
+    const nodes = blocks.map((block) => {
+        const nodeType = toNodeType(block.type) || "free";
         return {
-            id: block.id,
-            type: "custom",
-            position: { x: block.x, y: block.y },
+            id: String(block.id),
+            type: nodeType, // ← 'start' | 'split' | ...
+            position: { x: Number(block.x ?? 0), y: Number(block.y ?? 0) },
             data: {
-                data: block,
-                label: block.name ?? block.type,
-                type: block.type,
-                content: block.name ?? block.type,
-            }
-        }
-    })
+                data: block, // 원본 block 보관(선택)
+                label: block.name ?? block.type ?? "블록",
+                type: nodeType, // ← 내부 데이터도 소문자 타입로
+                content: block.name ?? block.type ?? "",
+            },
+        };
+    });
+
     const edges = [];
-    blocks.forEach(block => {
-        // { id: "e1-2", source: "AAAA", target: "BBBB", animated: true },
-        if(block.nextId) {
-            edges.push({ id: `e${block.id}-${block.nextId}`, source: block.id, target: block.nextId }) }
-        else if(block.type === "SPLIT" && block.quarterInfo) {
-            edges.push({
-                id: `e${block.id}-${block.quarterInfo.defaultConnectId}`,
-                source: block.id,
-                target: block.quarterInfo.defaultConnectId,
-                type: "editable",
-                label: "기본연결",
-                data: { label: "기본연결" }
-            })
-            block.quarterInfo.quarters.forEach(quarter => {
+    blocks.forEach((block) => {
+        const src = String(block.id);
+        const t = normalizeKey(block.type);
+
+        if (t === "SPLIT") {
+            const qi = block.quarterInfo;
+            // 기본 연결
+            if (qi?.defaultConnectId) {
                 edges.push({
-                    id: `e${block.id}-${quarter.connectId}`,
-                    source: block.id,
-                    target: quarter.connectId,
-                    label: quarter.name || "분기",
+                    id: `e${src}-${qi.defaultConnectId}`,
+                    source: src,
+                    target: String(qi.defaultConnectId),
                     type: "editable",
-                    data: { label: quarter.name ?? null }
-                })
-            })
+                    label: "기본연결",
+                    data: { label: "기본연결", isDefault: true }, // ← 저장 변환에서 사용
+                });
+            }
+            // 분기 연결들
+            (qi?.quarters ?? []).forEach((q) => {
+                if (!q?.connectId) return;
+                edges.push({
+                    id: `e${src}-${q.connectId}`,
+                    source: src,
+                    target: String(q.connectId),
+                    type: "editable",
+                    label: q.name ?? "분기",
+                    data: { label: q.name ?? null },
+                });
+            });
+        } else if (block.nextId) {
+            edges.push({
+                id: `e${src}-${block.nextId}`,
+                source: src,
+                target: String(block.nextId),
+            });
         }
-    })
+    });
+
     return { nodes, edges };
 };
+
 
 export function convertNodesEdgesToBlocks(nodes = [], edges = []) {
     const outgoingBySource = new Map();

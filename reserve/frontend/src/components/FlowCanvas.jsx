@@ -1,4 +1,3 @@
-// src/components/FlowCanvas.jsx
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
     ReactFlow, MiniMap, Controls, Background,
@@ -11,16 +10,25 @@ import { CustomNode } from "./node/custom.jsx";
 import {
     convertBlockToNodeEdge,
     convertNodesEdgesToBlocks,
-    sampleBlocks
 } from "../utils/BlockConvertUtils.jsx";
 import axiosInstance from "../utils/axios.js";
+import EditableEdge from "./edge/EditableEdge.jsx";
 
-import EditableEdge from './edge/EditableEdge.jsx';
-
-const nodeTypes = { custom: CustomNode };
-const edgeTypes = {
-    editable: EditableEdge,
+// ── (1) 타입별 nodeTypes 등록 ───────────────────────────────
+const nodeTypes = {
+    start: CustomNode,
+    select: CustomNode,
+    form: CustomNode,
+    free: CustomNode,
+    api: CustomNode,
+    split: CustomNode,
+    message: CustomNode,
+    end: CustomNode,
+    // (구버전 호환)
+    custom: CustomNode,
 };
+
+const edgeTypes = { editable: EditableEdge };
 
 /** 메뉴에 표시할 타입 목록 */
 export const BLOCK_TYPES = [
@@ -34,6 +42,10 @@ export const BLOCK_TYPES = [
     { key: "END",     label: "끝" },
 ];
 
+/** 키 정규화/매핑 유틸 */
+const normalizeKey = (raw) => String(raw || "").trim().toUpperCase();
+const toNodeType = (raw) => normalizeKey(raw).toLowerCase(); // reactflow node.type
+
 /** 타입키 → 한글 라벨 매핑 */
 const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
     acc[cur.key] = cur.label;
@@ -41,7 +53,7 @@ const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
 }, {});
 
 const makeNodeDataByType = (rawKey) => {
-    const KEY = String(rawKey || "").trim().toUpperCase();
+    const KEY = normalizeKey(rawKey);
     const label = LABEL_BY_KEY[KEY] ?? "블록";
     return { label, type: KEY.toLowerCase(), content: "" };
 };
@@ -67,36 +79,35 @@ export default function ReactFlowCanvas({ scenarioId }) {
         (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
         []
     );
+
     const onConnect = useCallback(
         (params) => {
-            console.log(params);
-            if(nodes.find(n => n.id === params.target)?.data.type === 'START') {
+            if (nodes.find(n => n.id === params.target)?.data.type === "start") {
                 alert("시작 노드로 연결할 수 없습니다.");
                 return;
             }
-            if(nodes.find(x => x.id === params.source)?.data.type === "SPLIT") {
-                console.log("ddddd");
-                params.type = 'editable';
+            if (nodes.find(x => x.id === params.source)?.data.type === "split") {
+                params.type = "editable";
                 params.data = { label: null };
             }
-            setEdges((eds) => addEdge(params, eds))
+            setEdges((eds) => addEdge(params, eds));
         },
         [nodes]
     );
 
-    // DnD로 노드 추가
+    // ── (2) DnD로 노드 추가: node.type을 타입명으로 매핑 ───────
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
-            const type = event.dataTransfer.getData("application/reactflow");
-            if (typeof type === "undefined" || !type) return;
+            const draggedType = event.dataTransfer.getData("application/reactflow");
+            if (!draggedType) return;
 
             const getNodeLabel = (typeKey) => {
-                const KEY = String(typeKey || "").trim().toUpperCase();
+                const KEY = normalizeKey(typeKey);
                 return LABEL_BY_KEY[KEY] ?? "블록";
             };
             const getNodeContent = (typeKey) => {
-                const KEY = String(typeKey || "").trim().toUpperCase();
+                const KEY = normalizeKey(typeKey);
                 if (KEY === "START") return "시나리오 시작";
                 if (KEY === "END") return "시나리오 종료";
                 return "";
@@ -109,14 +120,16 @@ export default function ReactFlowCanvas({ scenarioId }) {
                     y: event.clientY - bounds.top,
                 });
 
+                const nodeType = toNodeType(draggedType); // 'start' | 'select' | ...
+
                 const newNode = {
                     id: `${nodes.length + 1}`,
-                    type: "custom",
+                    type: nodeType, // ← 핵심
                     position,
                     data: {
-                        label: getNodeLabel(type),
-                        type: type,
-                        content: getNodeContent(type),
+                        label: getNodeLabel(draggedType),
+                        type: nodeType, // 내부 데이터도 소문자 타입로 보관
+                        content: getNodeContent(draggedType),
                     },
                 };
 
@@ -128,7 +141,12 @@ export default function ReactFlowCanvas({ scenarioId }) {
 
     const onNodeClick = useCallback((_, node) => openDrawer(node), [openDrawer]);
     const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
-
+    //더블 클릭으로 삭제 기능 구현
+    const onEdgeDoubleClick = useCallback((e, edge) => {
+        e.stopPropagation();
+        setEdges((eds) => eds.filter((ed) => ed.id !== edge.id));
+    }, []);
+    // ── (3) +추가 버튼으로 자식 만들 때도 node.type 일관성 ─────
     const addNextNode = useCallback((parentId, typeKey) => {
         const childId = newId();
         let created = null;
@@ -137,9 +155,10 @@ export default function ReactFlowCanvas({ scenarioId }) {
             const parent = nds.find((n) => n.id === parentId);
             if (!parent) return nds;
 
+            const nodeType = toNodeType(typeKey);
             const newNode = {
                 id: childId,
-                type: "custom",
+                type: nodeType,
                 position: { x: parent.position.x + 320, y: parent.position.y },
                 data: makeNodeDataByType(typeKey),
             };
@@ -182,7 +201,9 @@ export default function ReactFlowCanvas({ scenarioId }) {
             (res) => {
                 if (res.data.code === "0000") {
                     const elements = res.data.data.elements ?? [];
-                    const { nodes: loadedNodes, edges: loadedEdges } = convertBlockToNodeEdge(elements);
+                    // convertBlockToNodeEdge에서 node.type / data.type을 소문자 타입으로 반환하도록 맞추세요.
+                    const { nodes: loadedNodes, edges: loadedEdges } =
+                        convertBlockToNodeEdge(elements);
                     setNodes(loadedNodes);
                     setEdges(loadedEdges);
                 }
@@ -195,9 +216,6 @@ export default function ReactFlowCanvas({ scenarioId }) {
         try {
             setSaving(true);
             const blocks = convertNodesEdgesToBlocks(nodes, edges);
-
-            // 백엔드가 GET에서 data.elements를 주므로, POST도 elements로 보냄
-            // (필요 시 컨트롤러 규약에 맞게 'blocks'로 변경)
             const payload = [...blocks];
 
             const res = await axiosInstance.post(
@@ -290,6 +308,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
                 onConnect={onConnect}
                 onNodeClick={onNodeClick}
                 onDragOver={onDragOver}
+                onEdgeDoubleClick={onEdgeDoubleClick}
                 fitView
                 style={{ background: "#f9fafb" }}
                 onDrop={onDrop}
@@ -353,8 +372,3 @@ export default function ReactFlowCanvas({ scenarioId }) {
         </div>
     );
 }
-
-
-   //nodes/edges → Block 구조 변환
-
-
