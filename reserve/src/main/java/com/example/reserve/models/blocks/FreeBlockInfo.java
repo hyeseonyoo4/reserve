@@ -13,10 +13,7 @@ public class FreeBlockInfo {
     @Id
     private String id;
 
-    private List<Bubble> questions;    //
-    private Integer questionCount;
-    private Boolean isRepresentative; // 대표질문여부.
-
+    private Bubble question;    //
     private String parameterKey;
 }
 
@@ -29,3 +26,12 @@ public class FreeBlockInfo {
 //     재질문 - 최대 몇번까지 재질문
 //
 //-> 사용자가 입력한 값을 저장할 파라미터
+
+
+// 선택 블록
+// 질문: 원하시는 커피를 선택해주세요.
+// 선택지: 아메리카노, 카페라떼, 카푸치노, 바닐라라떼, 카라멜마끼아또, 콜드브루, 에스프레소
+
+// 자유 블록
+// 질문: 상담하고 싶은 내용을 자유롭게 입력해주세요.
+  //

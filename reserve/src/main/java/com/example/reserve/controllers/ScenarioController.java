@@ -21,13 +21,13 @@ public class ScenarioController {
 
     // 시나리오 저장
     @PostMapping
-    public ResponseEntity<?> createScenario(@RequestBody ScenarioDto.ScenarioCreateDto scenario) {
+    public ResultEntity<?> createScenario(@RequestBody ScenarioDto.ScenarioCreateDto scenario) {
         try {
             // 시나리오 저장 로직
-            return ResponseEntity.ok(ScenarioDto.toSimpleDto(scenarioService.createScenario(ScenarioDto.fromCreateDto(scenario))));
+            return ResultEntity.ok(ScenarioDto.toSimpleDto(scenarioService.createScenario(ScenarioDto.fromCreateDto(scenario))));
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error saving scenario: " + e.getMessage());
+            return new ResultEntity<>().fail("Error saving scenario: " + e.getMessage());
         }
     }
     //조회

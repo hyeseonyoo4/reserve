@@ -14,7 +14,8 @@ function EditableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
     const [isEditing, setIsEditing] = useState(false);
     const [label, setLabel] = useState(data?.label || null);
 
-    const handleDoubleClick = () => {
+    const handleDoubleClick = (e) => {
+        e.stopPropagation();
         setIsEditing(true);
     };
 

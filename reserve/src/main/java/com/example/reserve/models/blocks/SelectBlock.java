@@ -15,7 +15,13 @@ public class SelectBlock {
     @Id
     private String id;
 
+    private List<Bubble> questions;
+    private Integer questionCount;                      /// -> 선택지 블록 이동
+    private Boolean isRepresentative; // 대표질문여부.     /// -> 선택지 블록 이동
 
-    private List<Bubble> bubbles;
+    // 선택지 목록
+//    private List<SelectOption> options;
+
+    // 선택지의 응답을 저장할 시나리오 파라미터 키
     private String parameterKey;
 }

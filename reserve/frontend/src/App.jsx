@@ -4,6 +4,7 @@ import { Outlet, Link } from "react-router-dom";
 import { ReactFlowProvider } from "@xyflow/react";
 import RightDrawer from "./components/RightDrawer";
 import { useStudioStore } from "./store";
+import "./App.css";
 
 export default function App() {
     return (

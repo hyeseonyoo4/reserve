@@ -13,19 +13,22 @@ import {
 } from "../utils/BlockConvertUtils.jsx";
 import axiosInstance from "../utils/axios.js";
 import EditableEdge from "./edge/EditableEdge.jsx";
+import {SplitNode} from "./node/SplitNode.jsx";
+import {StartNode} from "./node/StartNode.jsx";
+import {EndNode} from "./node/EndNode.jsx";
 
 // ── (1) 타입별 nodeTypes 등록 ───────────────────────────────
 const nodeTypes = {
-    start: CustomNode,
-    select: CustomNode,
-    form: CustomNode,
-    free: CustomNode,
-    api: CustomNode,
-    split: CustomNode,
-    message: CustomNode,
-    end: CustomNode,
+    START: StartNode,
+    SELECT: CustomNode,
+    FORM: CustomNode,
+    FREE: CustomNode,
+    API: CustomNode,
+    SPLIT: SplitNode,
+    MESSAGE: CustomNode,
+    END: EndNode,
     // (구버전 호환)
-    custom: CustomNode,
+    // custom: CustomNode,
 };
 
 const edgeTypes = { editable: EditableEdge };
@@ -44,7 +47,6 @@ export const BLOCK_TYPES = [
 
 /** 키 정규화/매핑 유틸 */
 const normalizeKey = (raw) => String(raw || "").trim().toUpperCase();
-const toNodeType = (raw) => normalizeKey(raw).toLowerCase(); // reactflow node.type
 
 /** 타입키 → 한글 라벨 매핑 */
 const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
@@ -82,11 +84,11 @@ export default function ReactFlowCanvas({ scenarioId }) {
 
     const onConnect = useCallback(
         (params) => {
-            if (nodes.find(n => n.id === params.target)?.data.type === "start") {
+            if (nodes.find(n => n.id === params.target)?.data.type === "START") {
                 alert("시작 노드로 연결할 수 없습니다.");
                 return;
             }
-            if (nodes.find(x => x.id === params.source)?.data.type === "split") {
+            if (nodes.find(x => x.id === params.source)?.data.type === "SPLIT") {
                 params.type = "editable";
                 params.data = { label: null };
             }
@@ -120,7 +122,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
                     y: event.clientY - bounds.top,
                 });
 
-                const nodeType = toNodeType(draggedType); // 'start' | 'select' | ...
+                const nodeType = normalizeKey(draggedType); // 'start' | 'select' | ...
 
                 const newNode = {
                     id: `${nodes.length + 1}`,
@@ -155,7 +157,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
             const parent = nds.find((n) => n.id === parentId);
             if (!parent) return nds;
 
-            const nodeType = toNodeType(typeKey);
+            const nodeType = normalizeKey(typeKey);
             const newNode = {
                 id: childId,
                 type: nodeType,
