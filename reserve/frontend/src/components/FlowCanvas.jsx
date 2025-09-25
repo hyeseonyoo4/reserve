@@ -16,16 +16,21 @@ import EditableEdge from "./edge/EditableEdge.jsx";
 import {SplitNode} from "./node/SplitNode.jsx";
 import {StartNode} from "./node/StartNode.jsx";
 import {EndNode} from "./node/EndNode.jsx";
+import {FreeNode} from "./node/FreeNode.jsx";
+import {SelectNode} from "./node/SelectNode.jsx";
+import {FormNode} from "./node/FormNode.jsx";
+import {MessageNode} from "./node/MessageNode.jsx";
+
 
 // ── (1) 타입별 nodeTypes 등록 ───────────────────────────────
 const nodeTypes = {
     START: StartNode,
-    SELECT: CustomNode,
-    FORM: CustomNode,
-    FREE: CustomNode,
+    SELECT: SelectNode,
+    FORM: FormNode,
+    FREE: FreeNode,
     API: CustomNode,
     SPLIT: SplitNode,
-    MESSAGE: CustomNode,
+    MESSAGE: MessageNode,
     END: EndNode,
     // (구버전 호환)
     // custom: CustomNode,
