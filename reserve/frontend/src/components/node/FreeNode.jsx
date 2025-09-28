@@ -1,9 +1,10 @@
 // src/components/node/FreeNode.jsx
 import React from "react";
 import { Handle, Position } from "@xyflow/react";
+import { ImagePlus, Image } from "lucide-react";
 
 export function FreeNode({ id, data = {}, selected }) {
-    const { label, content, onAdd, onDelete } = data;
+    const { label, data: nodeData, content, onAdd, onDelete } = data;
 
     const CARD = "#22c55e";   // FREE 메인색(초록)
     const PLATE = "#3b82f6";  // 메시지 판 색 (파랑)
@@ -33,9 +34,14 @@ export function FreeNode({ id, data = {}, selected }) {
                         fontWeight: 800,
                         fontSize: 14,
                         color: "#0f172a",
+                        display: "flex",
+                        gap: 12,
+                        // justifyContent: "space-between",
+                        // alignItems: "center",
                     }}
                 >
-                    {(label || "FREEFORM").toString()}
+                    <span>[{(label || "FREEFORM").toString()}]</span>
+                    { label !== content && <span>{content || "FREEFORM"}</span> }
                 </div>
 
 
@@ -44,8 +50,24 @@ export function FreeNode({ id, data = {}, selected }) {
                         padding: 12,
                         background: `${CARD}22`,       // 연한 초록 배경
                         textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        position: "relative",
+                        gap: 8,
                     }}
                 >
+                    {nodeData?.freeBlockInfo?.question?.imagePath ?
+                        (<img alt={"image"} src={nodeData?.freeBlockInfo?.question?.imagePath} /> )
+                        : (
+                            <span style={{
+                                position: "absolute",
+                                top: -34,
+                                right: 8
+                            }}>
+                                <ImagePlus/>
+                            </span>
+                        )
+                    }
                     <div
                         style={{
                             background: PLATE,           // 파란 판
@@ -56,10 +78,12 @@ export function FreeNode({ id, data = {}, selected }) {
                             alignItems: "center",
                             justifyContent: "center",
                             fontWeight: 700,
+                            // flex: 1,
                         }}
                     >
-                        {content || "메시지"}
+                        {nodeData?.freeBlockInfo?.question?.text ?? "질문을 입력하세요."}
                     </div>
+
                 </div>
 
                 {/* 푸터 버튼 */}

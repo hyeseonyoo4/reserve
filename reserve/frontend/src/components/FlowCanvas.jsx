@@ -5,7 +5,7 @@ import {
     useViewport
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useStudioStore } from "../store";
+import { useStudioStore } from "../store/useStudioStore.js";
 import { CustomNode } from "./node/custom.jsx";
 import {
     convertBlockToNodeEdge,
@@ -20,6 +20,7 @@ import {FreeNode} from "./node/FreeNode.jsx";
 import {SelectNode} from "./node/SelectNode.jsx";
 import {FormNode} from "./node/FormNode.jsx";
 import {MessageNode} from "./node/MessageNode.jsx";
+import {Block} from "./type/BlockType.js";
 
 
 // ── (1) 타입별 nodeTypes 등록 ───────────────────────────────
@@ -137,6 +138,10 @@ export default function ReactFlowCanvas({ scenarioId }) {
                         label: getNodeLabel(draggedType),
                         type: nodeType, // 내부 데이터도 소문자 타입로 보관
                         content: getNodeContent(draggedType),
+                        data: new Block({
+                            type: nodeType,
+                            id: `${nodes.length + 1}`
+                        })
                     },
                 };
 

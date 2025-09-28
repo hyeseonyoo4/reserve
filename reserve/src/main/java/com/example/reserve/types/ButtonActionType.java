@@ -7,4 +7,5 @@ public enum ButtonActionType {
     QUESTION_SELECT,
     TEL,
     EMAIL,
+    JUMP
 }

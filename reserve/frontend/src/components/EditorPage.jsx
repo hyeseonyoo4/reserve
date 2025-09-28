@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useStudioStore } from "../store";
+import { useStudioStore } from "../store/useStudioStore.js";
 import FlowCanvas from "./FlowCanvas.jsx";
 import RightDrawer from "../components/RightDrawer";
 import Sidebar from "./Sidebar.jsx";

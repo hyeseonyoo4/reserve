@@ -3,7 +3,7 @@ import React from "react";
 import { Outlet, Link } from "react-router-dom";
 import { ReactFlowProvider } from "@xyflow/react";
 import RightDrawer from "./components/RightDrawer";
-import { useStudioStore } from "./store";
+import { useStudioStore } from "./store/useStudioStore.js";
 import "./App.css";
 
 export default function App() {

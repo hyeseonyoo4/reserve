@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { useStudioStore } from "../store"
+import { useStudioStore } from "../store/useStudioStore.js"
 //
 export default function RightDrawer({ width = 360 }) {
     const close = useStudioStore((s) => s.closeDrawer)

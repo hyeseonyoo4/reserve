@@ -1,21 +1,27 @@
 // 타입 정규화 유틸
+import {Block} from "../components/type/BlockType.js";
+
 const normalizeKey = (v) => String(v ?? "").trim().toUpperCase();
 
 export const convertBlockToNodeEdge = (blocks = []) => {
     const nodes = blocks.map((block) => {
         const nodeType = normalizeKey(block.type) || "FREE";
+
+        console.log(block.name, block);
         return {
             id: String(block.id),
             type: nodeType, // ← 'start' | 'split' | ...
             position: { x: Number(block.x ?? 0), y: Number(block.y ?? 0) },
             data: {
-                data: block, // 원본 block 보관(선택)
-                label: block.name ?? block.type ?? "블록",
+                data: new Block(block), // 원본 block 보관(선택)
+                label: block.type ?? "블록",
                 type: nodeType, // ← 내부 데이터도 소문자 타입로
                 content: block.name ?? block.type ?? "",
             },
         };
     });
+
+    console.log(nodes);
 
     const edges = [];
     blocks.forEach((block) => {
@@ -81,13 +87,9 @@ export function convertNodesEdgesToBlocks(nodes = [], edges = []) {
         const type = typeof rawType === "string" ? rawType.toUpperCase() : "FREE";
 
         const block = {
-            id: n.id,
-            type,                                   // START | SELECT | FORM | FREE | API | SPLIT | MESSAGE | END
-            name: get(n, "data.label", ""),
-            description: get(n, "data.content", ""),
+            ...n.data.data,
             x: get(n, "position.x", 0),
             y: get(n, "position.y", 0),
-
         };
 
         const outs = outgoingBySource.get(n.id) || [];
