@@ -25,7 +25,7 @@ export function FreeNode({ id, data = {}, selected }) {
                     overflow: "hidden",
                 }}
             >
-                {/* 헤더 (두 번째 스샷처럼 심플) */}
+
                 <div
                     style={{
                         padding: "10px 12px",
@@ -35,10 +35,10 @@ export function FreeNode({ id, data = {}, selected }) {
                         color: "#0f172a",
                     }}
                 >
-                    {(label || "자유폼").toString()}
+                    {(label || "FREEFORM").toString()}
                 </div>
 
-                {/* 바디: 연한 초록 배경 + 파란 '메시지' 판 */}
+
                 <div
                     style={{
                         padding: 12,
