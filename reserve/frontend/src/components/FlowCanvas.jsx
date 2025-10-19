@@ -1,29 +1,31 @@
+// src/components/scenario/FlowCanvas.jsx
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
     ReactFlow, MiniMap, Controls, Background,
-    addEdge, applyNodeChanges, applyEdgeChanges, BackgroundVariant,
-    useViewport
+    addEdge, applyNodeChanges, applyEdgeChanges, BackgroundVariant, useViewport
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+
 import { useStudioStore } from "../store/useStudioStore.js";
+
 import { CustomNode } from "./node/custom.jsx";
+import { SplitNode } from "./node/SplitNode.jsx";
+import { StartNode } from "./node/StartNode.jsx";
+import { EndNode } from "./node/EndNode.jsx";
+import { FreeNode } from "./node/FreeNode.jsx";
+import { SelectNode } from "./node/SelectNode.jsx";
+import { FormNode } from "./node/FormNode.jsx";
+import { MessageNode } from "./node/MessageNode.jsx";
+
+import EditableEdge from "./edge/EditableEdge.jsx";
 import {
     convertBlockToNodeEdge,
     convertNodesEdgesToBlocks,
 } from "../utils/BlockConvertUtils.jsx";
 import axiosInstance from "../utils/axios.js";
-import EditableEdge from "./edge/EditableEdge.jsx";
-import {SplitNode} from "./node/SplitNode.jsx";
-import {StartNode} from "./node/StartNode.jsx";
-import {EndNode} from "./node/EndNode.jsx";
-import {FreeNode} from "./node/FreeNode.jsx";
-import {SelectNode} from "./node/SelectNode.jsx";
-import {FormNode} from "./node/FormNode.jsx";
-import {MessageNode} from "./node/MessageNode.jsx";
-import {Block} from "./type/BlockType.js";
+import { Block } from "./type/BlockType.js";
 
-
-// ── (1) 타입별 nodeTypes 등록 ───────────────────────────────
+/* 1) nodeTypes: ReactFlow의 node.type을 UPPERCASE로 고정 */
 const nodeTypes = {
     START: StartNode,
     SELECT: SelectNode,
@@ -33,13 +35,11 @@ const nodeTypes = {
     SPLIT: SplitNode,
     MESSAGE: MessageNode,
     END: EndNode,
-    // (구버전 호환)
-    // custom: CustomNode,
 };
 
 const edgeTypes = { editable: EditableEdge };
 
-/** 메뉴에 표시할 타입 목록 */
+/** 메뉴 타입 */
 export const BLOCK_TYPES = [
     { key: "START",   label: "시작" },
     { key: "SELECT",  label: "선택" },
@@ -51,19 +51,19 @@ export const BLOCK_TYPES = [
     { key: "END",     label: "끝" },
 ];
 
-/** 키 정규화/매핑 유틸 */
+/** 유틸 */
 const normalizeKey = (raw) => String(raw || "").trim().toUpperCase();
 
-/** 타입키 → 한글 라벨 매핑 */
 const LABEL_BY_KEY = BLOCK_TYPES.reduce((acc, cur) => {
     acc[cur.key] = cur.label;
     return acc;
 }, {});
 
+/* 2) data.type도 UPPERCASE로 맞춤 */
 const makeNodeDataByType = (rawKey) => {
     const KEY = normalizeKey(rawKey);
     const label = LABEL_BY_KEY[KEY] ?? "블록";
-    return { label, type: KEY.toLowerCase(), content: "" };
+    return { label, type: KEY, content: "" };
 };
 
 const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -90,11 +90,14 @@ export default function ReactFlowCanvas({ scenarioId }) {
 
     const onConnect = useCallback(
         (params) => {
-            if (nodes.find(n => n.id === params.target)?.data.type === "START") {
+            const tgtType = nodes.find(n => n.id === params.target)?.data?.type;
+            const srcType = nodes.find(n => n.id === params.source)?.data?.type;
+
+            if (tgtType === "START") {
                 alert("시작 노드로 연결할 수 없습니다.");
                 return;
             }
-            if (nodes.find(x => x.id === params.source)?.data.type === "SPLIT") {
+            if (srcType === "SPLIT") {
                 params.type = "editable";
                 params.data = { label: null };
             }
@@ -103,21 +106,19 @@ export default function ReactFlowCanvas({ scenarioId }) {
         [nodes]
     );
 
-    // ── (2) DnD로 노드 추가: node.type을 타입명으로 매핑 ───────
+    /* 3) DnD 추가: 고유 id 사용 + 타입 UPPERCASE */
     const onDrop = useCallback(
         (event) => {
             event.preventDefault();
             const draggedType = event.dataTransfer.getData("application/reactflow");
             if (!draggedType) return;
 
-            const getNodeLabel = (typeKey) => {
-                const KEY = normalizeKey(typeKey);
-                return LABEL_BY_KEY[KEY] ?? "블록";
-            };
-            const getNodeContent = (typeKey) => {
-                const KEY = normalizeKey(typeKey);
-                if (KEY === "START") return "시나리오 시작";
-                if (KEY === "END") return "시나리오 종료";
+            const KEY = normalizeKey(draggedType);
+            const getNodeLabel = (k) => LABEL_BY_KEY[normalizeKey(k)] ?? "블록";
+            const getNodeContent = (k) => {
+                const U = normalizeKey(k);
+                if (U === "START") return "시나리오 시작";
+                if (U === "END") return "시나리오 종료";
                 return "";
             };
 
@@ -128,37 +129,33 @@ export default function ReactFlowCanvas({ scenarioId }) {
                     y: event.clientY - bounds.top,
                 });
 
-                const nodeType = normalizeKey(draggedType); // 'start' | 'select' | ...
-
+                const id = newId();
                 const newNode = {
-                    id: `${nodes.length + 1}`,
-                    type: nodeType, // ← 핵심
+                    id,
+                    type: KEY,                // ReactFlow node type (UPPERCASE)
                     position,
                     data: {
-                        label: getNodeLabel(draggedType),
-                        type: nodeType, // 내부 데이터도 소문자 타입로 보관
-                        content: getNodeContent(draggedType),
-                        data: new Block({
-                            type: nodeType,
-                            id: `${nodes.length + 1}`
-                        })
+                        ...makeNodeDataByType(KEY),
+                        data: new Block({ type: KEY, id }),  // 초기 block 데이터
                     },
                 };
 
                 setNodes((nds) => nds.concat(newNode));
             }
         },
-        [reactFlowInstance, nodes.length, setNodes]
+        [reactFlowInstance, setNodes]
     );
 
     const onNodeClick = useCallback((_, node) => openDrawer(node), [openDrawer]);
     const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
-    //더블 클릭으로 삭제 기능 구현
+
+    /* 엣지 더블클릭 삭제 */
     const onEdgeDoubleClick = useCallback((e, edge) => {
         e.stopPropagation();
         setEdges((eds) => eds.filter((ed) => ed.id !== edge.id));
     }, []);
-    // ── (3) +추가 버튼으로 자식 만들 때도 node.type 일관성 ─────
+
+    /* 4) +추가 버튼: 타입/데이터 일관성 (UPPERCASE) */
     const addNextNode = useCallback((parentId, typeKey) => {
         const childId = newId();
         let created = null;
@@ -167,12 +164,15 @@ export default function ReactFlowCanvas({ scenarioId }) {
             const parent = nds.find((n) => n.id === parentId);
             if (!parent) return nds;
 
-            const nodeType = normalizeKey(typeKey);
+            const KEY = normalizeKey(typeKey);
             const newNode = {
                 id: childId,
-                type: nodeType,
+                type: KEY,
                 position: { x: parent.position.x + 320, y: parent.position.y },
-                data: makeNodeDataByType(typeKey),
+                data: {
+                    ...makeNodeDataByType(KEY),
+                    data: new Block({ type: KEY, id: childId }),
+                },
             };
             created = newNode;
             return [...nds, newNode];
@@ -200,41 +200,32 @@ export default function ReactFlowCanvas({ scenarioId }) {
         const midFlowY = (parent.position.y + newY) / 2;
 
         const left = midFlowX * zoom + vx;
-        const top  = midFlowY * zoom + vy;
+        const top = midFlowY * zoom + vy;
 
         setTypeMenu({ parentId, left, top });
     }, [nodes, vx, vy, zoom]);
 
     useEffect(() => { setTypeMenu(null); }, [vx, vy, zoom]);
 
-    // 시나리오 데이터 불러오기 (Blocks → nodes/edges)
+    /* 5) 데이터 로드 */
     useEffect(() => {
-        axiosInstance.get(`/api/v1/blocks/scenario/${scenarioId}`).then(
-            (res) => {
-                if (res.data.code === "0000") {
-                    const elements = res.data.data.elements ?? [];
-                    // convertBlockToNodeEdge에서 node.type / data.type을 소문자 타입으로 반환하도록 맞추세요.
-                    const { nodes: loadedNodes, edges: loadedEdges } =
-                        convertBlockToNodeEdge(elements);
-                    setNodes(loadedNodes);
-                    setEdges(loadedEdges);
-                }
+        axiosInstance.get(`/api/v1/blocks/scenario/${scenarioId}`).then((res) => {
+            if (res.data.code === "0000") {
+                const elements = res.data.data.elements ?? [];
+                const { nodes: loadedNodes, edges: loadedEdges } = convertBlockToNodeEdge(elements);
+                setNodes(loadedNodes);
+                setEdges(loadedEdges);
             }
-        );
+        });
     }, [scenarioId]);
 
-    // 저장 핸들러: nodes/edges → Blocks로 변환 후 전송
+    /* 6) 저장 */
     const onSave = useCallback(async () => {
         try {
             setSaving(true);
             const blocks = convertNodesEdgesToBlocks(nodes, edges);
             const payload = [...blocks];
-
-            const res = await axiosInstance.post(
-                `/api/v1/blocks/scenario/${scenarioId}`,
-                payload
-            );
-
+            const res = await axiosInstance.post(`/api/v1/blocks/scenario/${scenarioId}`, payload);
             if (res?.data?.code === "0000") {
                 alert("저장 완료!");
             } else {
@@ -249,7 +240,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
         }
     }, [nodes, edges, scenarioId]);
 
-    // CTRL/CMD + S 핫키로 저장
+    /* 저장 단축키 */
     useEffect(() => {
         const handler = (e) => {
             const isMac = navigator.platform.toUpperCase().includes("MAC");
@@ -262,6 +253,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
         return () => window.removeEventListener("keydown", handler);
     }, [onSave]);
 
+    /* 7) 핸들러 주입: onAdd/ onPatch(깊은 병합) */
     const nodesWithHandlers = useMemo(
         () =>
             nodes.map((n) => ({
@@ -274,9 +266,30 @@ export default function ReactFlowCanvas({ scenarioId }) {
                     },
                     onAddClick: (parentId) => openTypeMenuAtMid(parentId),
                     onDelete: removeNode,
+                    onPatch: (nodeId, patch) => {
+                        setNodes((nds) =>
+                            nds.map((x) => {
+                                if (x.id !== nodeId) return x;
+                                // 깊은 병합: patch.data가 있으면 x.data.data와 병합
+                                if (patch?.data) {
+                                    return {
+                                        ...x,
+                                        data: {
+                                            ...x.data,
+                                            ...patch,
+                                            data: { ...(x.data.data || {}), ...(patch.data || {}) },
+                                        },
+                                    };
+                                }
+                                return { ...x, data: { ...x.data, ...patch } };
+                            })
+                        );
+
+                        // 즉시 서버 반영하고 싶으면 여기서 axiosInstance.patch(...) 추가
+                    },
                 },
             })),
-        [nodes, openTypeMenuAtMid, addNextNode, removeNode]
+        [nodes, openTypeMenuAtMid, addNextNode, removeNode, setNodes]
     );
 
     const pickType = (typeKey) => {
@@ -286,11 +299,8 @@ export default function ReactFlowCanvas({ scenarioId }) {
     };
 
     return (
-        <div
-            ref={reactFlowWrapper}
-            style={{ position: "relative", width: "100%", height: "calc(100% - 40px)" }}
-        >
-            {/* 상단 우측 저장 버튼 */}
+        <div ref={reactFlowWrapper} style={{ position: "relative", width: "100%", height: "calc(100% - 40px)" }}>
+            {/* 저장 버튼 */}
             <div style={{ position: "absolute", right: 12, top: 8, zIndex: 1100, display: "flex", gap: 8 }}>
                 <button
                     onClick={onSave}

@@ -1,32 +1,49 @@
 // src/components/node/FreeNode.jsx
-import React from "react";
+import React, { useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { ImagePlus, Image } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 
 export function FreeNode({ id, data = {}, selected }) {
-    const { label, data: nodeData, content, onAdd, onDelete } = data;
+    const { label, data: nodeData, content, onAdd, onDelete, onImagePick } = data;
+    const CARD = "#22c55e";
+    const PLATE = "#3b82f6";
 
-    const CARD = "#22c55e";   // FREE 메인색(초록)
-    const PLATE = "#3b82f6";  // 메시지 판 색 (파랑)
+    const fileRef = useRef(null);
 
     const add = (e) => { e.stopPropagation(); onAdd?.(id); };
     const del = (e) => { e.stopPropagation(); onDelete?.(id); };
+
+    const openPicker = (e) => {
+        e.stopPropagation();
+        fileRef.current?.click();               // 숨겨진 input 열기
+    };
+
+    const onFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        // FlowCanvas에서 주입해줄 콜백으로 위임 (미리보기/업로드/상태업데이트)
+        onImagePick?.(id, file);
+        // 같은 파일 연속 선택 가능하게 리셋
+        e.target.value = "";
+    };
+
+    const imgSrc = nodeData?.freeBlockInfo?.question?.imagePath;
 
     return (
         <div style={{ position: "relative", overflow: "visible" }}>
             <div
                 style={{
                     width: 280,
-                    border: `2px solid ${CARD}`,     // 두 번째 스샷처럼 테두리만 컬러
+                    border: `2px solid ${CARD}`,
                     borderRadius: 16,
-                    background: "#fff",              // 카드 배경은 흰색
+                    background: "#fff",
                     boxShadow: selected
                         ? `0 0 0 4px ${CARD}22, 0 8px 24px rgba(0,0,0,.08)`
                         : "0 8px 24px rgba(0,0,0,.06)",
                     overflow: "hidden",
                 }}
             >
-
+                {/* 헤더 */}
                 <div
                     style={{
                         padding: "10px 12px",
@@ -35,20 +52,47 @@ export function FreeNode({ id, data = {}, selected }) {
                         fontSize: 14,
                         color: "#0f172a",
                         display: "flex",
-                        gap: 12,
-                        // justifyContent: "space-between",
-                        // alignItems: "center",
+                        gap: 8,
+                        alignItems: "center",
+                        justifyContent: "space-between",
                     }}
                 >
-                    <span>[{(label || "FREEFORM").toString()}]</span>
-                    { label !== content && <span>{content || "FREEFORM"}</span> }
+                    <div style={{ display:"flex", gap:12 }}>
+                        <span>[{(label || "FREEFORM").toString()}]</span>
+                        {label !== content && <span>{content || "FREEFORM"}</span>}
+                    </div>
+
+                    {/* 사진 추가 버튼 */}
+                    <button
+                        onClick={openPicker}
+                        title="사진/파일 추가"
+                        style={{
+                            border: "none",
+                            background: "transparent",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            padding: 4,
+                        }}
+                    >
+                        <ImagePlus size={18} />
+                    </button>
+
+                    {/* 숨겨진 파일 선택기 */}
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*"            // 파일도 허용하려면 "image/*,.pdf,.doc,.docx" 등으로 변경
+                        style={{ display: "none" }}
+                        onChange={onFileChange}
+                    />
                 </div>
 
-
+                {/* 바디 */}
                 <div
                     style={{
                         padding: 12,
-                        background: `${CARD}22`,       // 연한 초록 배경
+                        background: `${CARD}22`,
                         textAlign: "center",
                         display: "flex",
                         flexDirection: "column",
@@ -56,37 +100,37 @@ export function FreeNode({ id, data = {}, selected }) {
                         gap: 8,
                     }}
                 >
-                    {nodeData?.freeBlockInfo?.question?.imagePath ?
-                        (<img alt={"image"} src={nodeData?.freeBlockInfo?.question?.imagePath} /> )
-                        : (
-                            <span style={{
-                                position: "absolute",
-                                top: -34,
-                                right: 8
-                            }}>
-                                <ImagePlus/>
-                            </span>
-                        )
-                    }
+                    {imgSrc ? (
+                        <img
+                            alt="첨부 이미지"
+                            src={imgSrc}
+                            style={{
+                                width: "100%",
+                                maxHeight: 160,
+                                objectFit: "cover",
+                                borderRadius: 12,
+                            }}
+                        />
+                    ) : null}
+
                     <div
                         style={{
-                            background: PLATE,           // 파란 판
+                            background: PLATE,
                             color: "#fff",
                             borderRadius: 18,
-                            height: 80,
+                            minHeight: 80,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             fontWeight: 700,
-                            // flex: 1,
+                            padding: "12px 16px",
                         }}
                     >
                         {nodeData?.freeBlockInfo?.question?.text ?? "질문을 입력하세요."}
                     </div>
-
                 </div>
 
-                {/* 푸터 버튼 */}
+                {/* 푸터 */}
                 <div
                     style={{
                         display: "flex",
@@ -96,16 +140,12 @@ export function FreeNode({ id, data = {}, selected }) {
                     }}
                 >
                     <button style={chip} onClick={add}>추가</button>
-                    <button
-                        style={{ ...chip, borderColor: "#fecaca", color: "#b91c1c" }}
-                        onClick={del}
-                    >
+                    <button style={{ ...chip, borderColor: "#fecaca", color: "#b91c1c" }} onClick={del}>
                         삭제
                     </button>
                 </div>
             </div>
 
-            {/* 연결 핸들 (안 잘리게 래퍼 밖) */}
             <Handle type="target" position={Position.Top} style={handleStyle} />
             <Handle type="source" position={Position.Bottom} style={handleStyle} />
         </div>
