@@ -2,7 +2,7 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
     ReactFlow, MiniMap, Controls, Background,
-    addEdge, applyNodeChanges, applyEdgeChanges, BackgroundVariant, useViewport
+    addEdge, applyNodeChanges, applyEdgeChanges, BackgroundVariant, useViewport, useNodesState, useEdgesState
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -24,6 +24,7 @@ import {
 } from "../utils/BlockConvertUtils.jsx";
 import axiosInstance from "../utils/axios.js";
 import { Block } from "./type/BlockType.js";
+import {useScenarioDataStore} from "../store/useScenarioDataStore.js";
 
 /* 1) nodeTypes: ReactFlow의 node.type을 UPPERCASE로 고정 */
 const nodeTypes = {
@@ -70,11 +71,18 @@ const newId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
 export default function ReactFlowCanvas({ scenarioId }) {
     const reactFlowWrapper = useRef(null);
-    const [nodes, setNodes] = useState([]);
-    const [edges, setEdges] = useState([]);
+    // const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    // const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    // const [nodes, setNodes] = useNodesState([]);
+    // const [edges, setEdges] = useEdgesState([]);
     const [typeMenu, setTypeMenu] = useState(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const [saving, setSaving] = useState(false);
+
+    const nodes = useScenarioDataStore((s) => s.nodes);
+    const edges = useScenarioDataStore((s) => s.edges);
+    const setNodes = useScenarioDataStore((s) => s.setNodes);
+    const setEdges = useScenarioDataStore((s) => s.setEdges);
 
     const openDrawer = useStudioStore((s) => s.openDrawer);
     const { x: vx, y: vy, zoom } = useViewport();
@@ -122,6 +130,7 @@ export default function ReactFlowCanvas({ scenarioId }) {
                 return "";
             };
 
+            // TODO: addNextNode 와 공통으로 사용될 수 있지 않을까...
             if (reactFlowWrapper.current && reactFlowInstance) {
                 const bounds = reactFlowWrapper.current.getBoundingClientRect();
                 const position = reactFlowInstance.screenToFlowPosition({
@@ -146,7 +155,9 @@ export default function ReactFlowCanvas({ scenarioId }) {
         [reactFlowInstance, setNodes]
     );
 
-    const onNodeClick = useCallback((_, node) => openDrawer(node), [openDrawer]);
+    const onNodeClick = useCallback((_, node) => {
+        //openDrawer(node)
+    }, [openDrawer]);
     const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }, []);
 
     /* 엣지 더블클릭 삭제 */

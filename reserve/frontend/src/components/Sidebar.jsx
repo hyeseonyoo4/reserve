@@ -35,7 +35,9 @@ export default function Sidebar() {
             {/*<Item type="timer" label="타이머" />*/}
             {/*<Item type="complete" label="완료" />*/}
             {
-                BLOCK_TYPES.map((type) => <Item key={type.key} type={type.key} label={type.label} />)
+                BLOCK_TYPES
+                    .filter(x => x.key !== 'START')
+                    .map((type) => <Item key={type.key} type={type.key} label={type.label} />)
             }
         </aside>
     )

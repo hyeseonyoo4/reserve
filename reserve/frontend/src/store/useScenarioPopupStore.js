@@ -6,7 +6,6 @@ export const TargetComponentType = {
     IMAGE: "IMAGE",
     TEXT: "TEXT",
     BUTTON: "BUTTON",
-
 };
 export const useScenarioPopupStore = create((set) => ({
     // 팝업 열림 상태

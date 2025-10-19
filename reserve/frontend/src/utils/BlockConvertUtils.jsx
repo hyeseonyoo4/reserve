@@ -16,7 +16,7 @@ export const convertBlockToNodeEdge = (blocks = []) => {
                 data: new Block(block), // 원본 block 보관(선택)
                 label: block.type ?? "블록",
                 type: nodeType, // ← 내부 데이터도 소문자 타입로
-                content: block.name ?? block.type ?? "",
+                // content: block.name ?? block.type ?? "",
             },
         };
     });

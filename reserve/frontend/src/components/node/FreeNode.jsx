@@ -1,17 +1,61 @@
 // src/components/node/FreeNode.jsx
-import React, { useRef } from "react";
-import { Handle, Position } from "@xyflow/react";
+import React, {useEffect, useRef} from "react";
+import {Handle, Position, useEdgesState, useNodesState} from "@xyflow/react";
 import { ImagePlus } from "lucide-react";
+import {TargetComponentType, useScenarioEditStore} from "../../store/useScenarioEditStore.js";
+import TextArea from "../edit/TextArea.jsx";
+import {useScenarioDataStore} from "../../store/useScenarioDataStore.js";
+import TextInput from "../edit/TextInput.jsx";
 
 export function FreeNode({ id, data = {}, selected }) {
     const { label, data: nodeData, content, onAdd, onDelete, onImagePick } = data;
+
+    const setNodeData = useScenarioDataStore((s) => s.setNodeData);
+
+    const { currentNode, target, setCurrentNode, setTarget} =
+        useScenarioEditStore((s) => s);
+
     const CARD = "#22c55e";
-    const PLATE = "#3b82f6";
+    const PLATE = "#FFFFFFAA";
 
     const fileRef = useRef(null);
 
     const add = (e) => { e.stopPropagation(); onAdd?.(id); };
     const del = (e) => { e.stopPropagation(); onDelete?.(id); };
+
+    const onStartEdit = (type) => {
+        setTarget(type);
+        setCurrentNode(nodeData?.id);
+    };
+
+    const onEditChange = (type, newText) => {
+        if (!nodeData) return;
+        switch (type) {
+            case TargetComponentType.TEXT:
+                if(nodeData.freeBlockInfo.question === null) {
+                    nodeData.freeBlockInfo.question = { text: '' };
+                }
+                nodeData.freeBlockInfo.question.text = newText;
+                break;
+            case TargetComponentType.TITLE:
+                // if(nodeData.)
+                if(nodeData.name === undefined || nodeData.name === null) {
+                    nodeData.name = '';
+                }
+                nodeData.name = newText;
+                break;
+            default:
+                // break;
+                return;
+        }
+
+        setNodeData(nodeData.id, nodeData);
+    };
+
+    const onEditEnd = () => {
+        setTarget(null);
+        setCurrentNode(null);
+    }
 
     const openPicker = (e) => {
         e.stopPropagation();
@@ -57,10 +101,30 @@ export function FreeNode({ id, data = {}, selected }) {
                         justifyContent: "space-between",
                     }}
                 >
-                    <div style={{ display:"flex", gap:12 }}>
-                        <span>[{(label || "FREEFORM").toString()}]</span>
-                        {label !== content && <span>{content || "FREEFORM"}</span>}
-                    </div>
+                    {currentNode === nodeData?.id && target === TargetComponentType.TITLE ?
+                        (<div style={{display: "flex", gap: 12}}>
+                            <span>[{(label || "FREEFORM").toString()}]</span>
+                            <TextInput
+                                value={nodeData.name}
+                                onChange={(newText) => onEditChange(TargetComponentType.TITLE, newText)}
+                                onBlur={onEditEnd}
+                                placeholder="블록의 타이틀을 입력해주세요"
+                                autoFocus
+                                style={{
+                                    color: "#1f2937", // 텍스트 색상
+                                    borderBottom: "1px solid #3b82f6", // 파란색 밑줄 (활성화 강조)
+                                    padding: "2px",
+                                }}
+                            />
+                        </div>)
+                        :
+                        (<div style={{display: "flex", gap: 12}}>
+                            <span style={{ whiteSpace: "nowrap" }}>[{(label || "FREEFORM").toString()}]</span>
+                            <div style={{flex: 1, display: "flex", alignItems: "center"}} onDoubleClick={() => onStartEdit(TargetComponentType.TITLE)}>
+                                {label !== nodeData.name && <span>{nodeData.name || "FREEFORM"}</span>}
+                            </div>
+                        </div>)
+                    }
 
                     {/* 사진 추가 버튼 */}
                     <button
@@ -113,21 +177,39 @@ export function FreeNode({ id, data = {}, selected }) {
                         />
                     ) : null}
 
-                    <div
-                        style={{
-                            background: PLATE,
-                            color: "#fff",
-                            borderRadius: 18,
-                            minHeight: 80,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: 700,
-                            padding: "12px 16px",
-                        }}
-                    >
-                        {nodeData?.freeBlockInfo?.question?.text ?? "질문을 입력하세요."}
-                    </div>
+                    { currentNode === nodeData?.id && target === TargetComponentType.TEXT ? (
+                        <div style={{ display: "flex", gap: 8, alignItems: "center"}}>
+                            <TextArea
+                                value={nodeData?.freeBlockInfo?.question?.text}
+                                placeholder="질문을 입력하세요."
+                                onChange={(newText) => onEditChange(TargetComponentType.TEXT, newText)}
+                                onBlur={onEditEnd}
+                                autoFocus
+                                rows={6}
+                                style={{ border: "2px solid #3b82f6" }} // 추가 스타일 예시 (파란색 테두리)
+                            />
+                        </div>
+                    ) : (
+                        <div
+                            onDoubleClick={() => onStartEdit(TargetComponentType.TEXT)}
+                            style={{
+                                background: PLATE,
+                                color: "#333",
+                                borderRadius: 10,
+                                minHeight: 80,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontWeight: 700,
+                                padding: "12px 16px",
+                                whiteSpace: "pre-wrap", // 줄바꿈과 공백 유지
+                                textAlign: "left"
+                            }}
+                        >
+                            {nodeData?.freeBlockInfo?.question?.text ?? "질문을 입력하세요."}
+                        </div>
+                    )}
+
                 </div>
 
                 {/* 푸터 */}

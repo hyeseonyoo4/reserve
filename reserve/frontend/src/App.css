@@ -474,3 +474,17 @@
 .bg-transparent {
   background-color: transparent;
 }
+
+/* 스크롤바 스타일링 (WebKit 기반 브라우저용) */
+textarea::-webkit-scrollbar {
+  width: 8px; /* 스크롤바의 너비 */
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.8); /* 스크롤 핸들 색상 (중간 회색) */
+  border-radius: 10px; /* 둥근 모서리 */
+}
+
+textarea::-webkit-scrollbar-track {
+  background: #e5e7eb; /* 스크롤 트랙 색상 (연한 회색) */
+}
