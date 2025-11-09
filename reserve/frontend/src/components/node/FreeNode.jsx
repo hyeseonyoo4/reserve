@@ -6,6 +6,7 @@ import {TargetComponentType, useScenarioEditStore} from "../../store/useScenario
 import TextArea from "../edit/TextArea.jsx";
 import {useScenarioDataStore} from "../../store/useScenarioDataStore.js";
 import TextInput from "../edit/TextInput.jsx";
+import NodeHeaderTitle from "../common/NodeHeaderTitle.jsx";
 
 export function FreeNode({ id, data = {}, selected }) {
     const { label, data: nodeData, content, onAdd, onDelete, onImagePick } = data;
@@ -48,7 +49,6 @@ export function FreeNode({ id, data = {}, selected }) {
                 // break;
                 return;
         }
-
         setNodeData(nodeData.id, nodeData);
     };
 
@@ -101,30 +101,13 @@ export function FreeNode({ id, data = {}, selected }) {
                         justifyContent: "space-between",
                     }}
                 >
-                    {currentNode === nodeData?.id && target === TargetComponentType.TITLE ?
-                        (<div style={{display: "flex", gap: 12}}>
-                            <span>[{(label || "FREEFORM").toString()}]</span>
-                            <TextInput
-                                value={nodeData.name}
-                                onChange={(newText) => onEditChange(TargetComponentType.TITLE, newText)}
-                                onBlur={onEditEnd}
-                                placeholder="블록의 타이틀을 입력해주세요"
-                                autoFocus
-                                style={{
-                                    color: "#1f2937", // 텍스트 색상
-                                    borderBottom: "1px solid #3b82f6", // 파란색 밑줄 (활성화 강조)
-                                    padding: "2px",
-                                }}
-                            />
-                        </div>)
-                        :
-                        (<div style={{display: "flex", gap: 12}}>
-                            <span style={{ whiteSpace: "nowrap" }}>[{(label || "FREEFORM").toString()}]</span>
-                            <div style={{flex: 1, display: "flex", alignItems: "center"}} onDoubleClick={() => onStartEdit(TargetComponentType.TITLE)}>
-                                {label !== nodeData.name && <span>{nodeData.name || "FREEFORM"}</span>}
-                            </div>
-                        </div>)
-                    }
+                    <NodeHeaderTitle nodeData={nodeData}
+                                     label={label}
+                                     blockType={"FREEFORM"}
+                                     onEditChange={onEditChange}
+                                     onStartEdit={onStartEdit}
+                                     onEditEnd={onEditEnd}
+                    />
 
                     {/* 사진 추가 버튼 */}
                     <button

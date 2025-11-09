@@ -13,8 +13,8 @@ export const BlockType = {
 // ChatDisplayType Enum
 export const ChatDisplayType = {
     CARD: 'CARD', // 카드
-    LIST: 'LIST', // 리스트
-    GRID: 'GRID', // 그리드
+    TEXT: 'TEXT', // 텍스트
+    SLIDE: 'SLIDE', // 슬라이드
 };
 
 // ButtonActionType Enum
@@ -41,10 +41,16 @@ export class FreeBlockInfo {
 
 // MessageBlockInfo 클래스
 export class MessageBlockInfo {
-    constructor({ id = '', messages = [] } = {}) {
+    constructor({
+                    id = '',
+                    style = ChatDisplayType.TEXT, // Default style
+                    messages = []
+    } = {}) {
         this.id = id;
+        this.style = Object.values(ChatDisplayType).includes(style) ? style : ChatDisplayType.TEXT; // 스타일
+
         this.messages = messages === null || messages.length === 0
-            ? []
+            ? [new Bubble()]
             : messages.map(message => new Bubble(message)); // 메시지 배열
     }
 }
@@ -53,20 +59,17 @@ export class MessageBlockInfo {
 export class Bubble {
     constructor({
                     id = '',
-                    style = ChatDisplayType.CARD, // Default style
+
                     order = 0,
                     imagePath = '', // 이미지 경로
                     text = '', // 텍스트 내용
                     buttons = [], // 버튼 리스트
                 } = {}) {
         this.id = id; // Bubble ID
-        this.style = Object.values(ChatDisplayType).includes(style) ? style : ChatDisplayType.CARD; // 스타일
         this.order = order; // 순서
         this.imagePath = imagePath; // 이미지 경로
         this.text = text; // 텍스트
         this.buttons = buttons === null ? [] : buttons.map((btn) => new Button(btn)); // 버튼 리스트 (Button 객체로 생성)
-
-        console.log(imagePath);
     }
 }
 
@@ -146,6 +149,7 @@ export class Block {
         this.nextId = nextId;
         this.x = x; // x 좌표
         this.y = y; // y 좌표
+
         this.freeBlockInfo = freeBlockInfo
             ? new FreeBlockInfo(freeBlockInfo)
             : BlockType.FREE === type
@@ -155,8 +159,14 @@ export class Block {
         this.formInfo = formInfo ? new InsertForm(formInfo) : null; // TODO: FormBlock 일때
         this.messageBlockInfo = messageBlockInfo
             ? new MessageBlockInfo(messageBlockInfo)
-            : null;
+            : BlockType.MESSAGE === type
+                ? new MessageBlockInfo()
+                : null;
         this.quarterInfo = quarterInfo ? new Quarter(quarterInfo) : null;
+
+        if(id === '4') {
+            console.log('Block 4 생성:', this);
+        }
     }
 
     // 좌표 업데이트

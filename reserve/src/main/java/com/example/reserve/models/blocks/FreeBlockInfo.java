@@ -1,5 +1,6 @@
 package com.example.reserve.models.blocks;
 
+import com.example.reserve.types.ChatDisplayType;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -9,12 +10,19 @@ import java.util.List;
 
 @Data
 @Builder
+/**
+ * 자유 블록 정보
+ * - 사용자가 자유롭게 입력한 값을 저장하는 블록
+ */
 public class FreeBlockInfo {
     @Id
     private String id;
 
-    private Bubble question;    //
-    private String parameterKey;
+    @Builder.Default
+    private ChatDisplayType style = ChatDisplayType.CARD;
+
+    private Bubble question;     // 질문카드
+    private String parameterKey; // 사용자가 입력한 값을 저장할 파라미터 키
 }
 
 

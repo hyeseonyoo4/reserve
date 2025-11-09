@@ -2,7 +2,8 @@ import { create } from "zustand"
 
 export const TargetComponentType = {
     TITLE: "TITLE",
-    TEXT: "TEXT"
+    TEXT: "TEXT",
+    SLIDE_TOGGLE: "SLIDE_TOGGLE",
 };
 
 export const useScenarioEditStore = create((set) => ({

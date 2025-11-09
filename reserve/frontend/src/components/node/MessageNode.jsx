@@ -8,27 +8,64 @@ import {
     useScenarioEditStore,
 } from "../../store/useScenarioEditStore.js";
 import { useScenarioDataStore } from "../../store/useScenarioDataStore.js";
+import NodeHeaderTitle from "../common/NodeHeaderTitle.jsx";
+import ToggleButton from "../edit/ToggleButton.jsx";
+import {MessageBlockInfo} from "../type/BlockType.js";
 
 export function MessageNode({ id, data = {}, selected }) {
-    const { label, type, content, onAdd, onDelete, buttons = null } = data;
-
+    const { label, type, content, data: nodeData, onAdd, onDelete, buttons = null } = data;
     // stores
     const setNodeData = useScenarioDataStore((s) => s.setNodeData);
     const { currentNode, target, setCurrentNode, setTarget } =
         useScenarioEditStore((s) => s);
 
     // styles
-    const BORDER = typeColors[String(type || "").toUpperCase()] || "#8b5cf6";
-    const CARD_BG = "#fff";
+    const CARD = typeColors[String(type || "").toUpperCase()] || "#8b5cf6";
     const PLATE = "#3b82f6";
-    const LIGHT_SECTION = `${BORDER}22`;
+
+    const CARD_BG = "#fff";
+    const LIGHT_SECTION = `${CARD}22`;
 
     // handlers
     const add = (e) => { e.stopPropagation(); onAdd?.(id); };
     const del = (e) => { e.stopPropagation(); onDelete?.(id); };
 
     const onStartEdit = (editType) => { setTarget(editType); setCurrentNode(id); };
-    const onEditChange = (newText) => { setNodeData(id, { ...data, content: newText ?? "" }); };
+    // const onEditChange = (newText) => { setNodeData(id, { ...data, content: newText ?? "" }); };
+
+    const onEditChange = (type, value, order) => {
+        if (!nodeData) return;
+        switch (type) {
+            case TargetComponentType.TEXT:
+                // 메시지 블록으로 바꿔야 함
+                if(nodeData.messageBlockInfo === null) {
+                    nodeData.messageBlockInfo = new MessageBlockInfo();
+                }
+
+                // 슬라이드가 아닐때
+                nodeData.messageBlockInfo.messages[0].text = value;
+
+                break;
+            case TargetComponentType.TITLE:
+                // if(nodeData.)
+                if(nodeData.name === undefined || nodeData.name === null) {
+                    nodeData.name = '';
+                }
+                nodeData.name = value;
+                break;
+            case TargetComponentType.SLIDE_TOGGLE:
+                if(nodeData.messageBlockInfo === null) {
+                    nodeData.messageBlockInfo = new MessageBlockInfo();
+                }
+                nodeData.messageBlockInfo.style = value ? "SLIDE" : "TEXT";
+                break;
+            default:
+                // break;
+                return;
+        }
+        setNodeData(nodeData.id, nodeData);
+    };
+
     const onEditEnd = () => { setTarget(null); setCurrentNode(null); };
 
     // 버튼 로직
@@ -53,11 +90,11 @@ export function MessageNode({ id, data = {}, selected }) {
             <div
                 style={{
                     width: 280,
-                    border: `2px solid ${BORDER}`,
+                    border: `2px solid ${CARD}`,
                     borderRadius: 16,
                     background: CARD_BG,
                     boxShadow: selected
-                        ? `0 0 0 4px ${BORDER}22, 0 8px 24px rgba(0,0,0,.08)`
+                        ? `0 0 0 4px ${LIGHT_SECTION}, 0 8px 24px rgba(0,0,0,.08)`
                         : "0 8px 24px rgba(0,0,0,.06)",
                     overflow: "hidden",
                 }}
@@ -66,27 +103,38 @@ export function MessageNode({ id, data = {}, selected }) {
                 <div
                     style={{
                         padding: "10px 12px",
-                        borderBottom: `2px solid ${BORDER}`,
+                        borderBottom: `2px solid ${CARD}`,
                         fontWeight: 800,
                         fontSize: 14,
                         color: "#0f172a",
                         display: "flex",
+                        gap: 8,
                         alignItems: "center",
                         justifyContent: "space-between",
                     }}
                 >
-                    {(label || "MESSAGE").toString()}
+                    <NodeHeaderTitle nodeData={nodeData}
+                                     label={label}
+                                     blockType={"MESSAGE"}
+                                     onEditChange={onEditChange}
+                                     onStartEdit={onStartEdit}
+                                     onEditEnd={onEditEnd}
+                    />
+                    <ToggleButton
+                        isOn={nodeData.messageBlockInfo?.style === "SLIDE" ?? false}
+                        onToggle={(value) => onEditChange(TargetComponentType.SLIDE_TOGGLE, value)}
+                    />
                 </div>
 
                 {/* 바디 */}
                 <div style={{ padding: 12, background: LIGHT_SECTION, textAlign: "center" }}>
-                    {/* 메시지 본문 */}
+                    {/* 메시지 본문 - 현재는 슬라이드가 아닌 경우만 고려... */}
                     {isEditingText ? (
                         <div style={{ marginBottom: 12 }}>
                             <TextArea
-                                value={content ?? ""}
+                                value={nodeData.messageBlockInfo?.messages[0]?.text ?? ""}
                                 placeholder="메시지를 입력하세요."
-                                onChange={onEditChange}
+                                onChange={(newText) => onEditChange(TargetComponentType.TEXT, newText)}
                                 onBlur={onEditEnd}
                                 autoFocus
                                 rows={4}
@@ -120,7 +168,7 @@ export function MessageNode({ id, data = {}, selected }) {
                             }}
                             title="클릭하여 편집"
                         >
-                            {(content ?? "메시지").toString()}
+                            {nodeData.messageBlockInfo?.messages[0]?.text ?? ""}
                         </div>
                     )}
 
