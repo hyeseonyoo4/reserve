@@ -178,6 +178,28 @@
   text-decoration: none;
 }
 
+.icon-btn {
+  height: 16px;
+  width: 16px;
+  border-radius: 3px;
+  background: #FFF5;
+  padding:4px;
+  border: 1px solid #333;
+  color: #333;
+  cursor: pointer;
+}
+
+.icon-btn.disabled {
+  height: 16px;
+  width: 16px;
+  border-radius: 3px;
+  background: #FFF5;
+  padding:4px;
+  border: 1px solid #999;
+  color: #999;
+  cursor: default;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

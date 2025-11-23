@@ -6,7 +6,8 @@ import {TargetComponentType, useScenarioEditStore} from "../../store/useScenario
 import TextArea from "../edit/TextArea.jsx";
 import {useScenarioDataStore} from "../../store/useScenarioDataStore.js";
 import TextInput from "../edit/TextInput.jsx";
-import NodeHeaderTitle from "../common/NodeHeaderTitle.jsx";
+import NodeHeaderTitle from "../node-common/NodeHeaderTitle.jsx";
+import NodeMessageArea from "../node-common/NodeMessageArea.jsx";
 
 export function FreeNode({ id, data = {}, selected }) {
     const { label, data: nodeData, content, onAdd, onDelete, onImagePick } = data;
@@ -160,38 +161,13 @@ export function FreeNode({ id, data = {}, selected }) {
                         />
                     ) : null}
 
-                    { currentNode === nodeData?.id && target === TargetComponentType.TEXT ? (
-                        <div style={{ display: "flex", gap: 8, alignItems: "center"}}>
-                            <TextArea
-                                value={nodeData?.freeBlockInfo?.question?.text}
-                                placeholder="질문을 입력하세요."
-                                onChange={(newText) => onEditChange(TargetComponentType.TEXT, newText)}
-                                onBlur={onEditEnd}
-                                autoFocus
-                                rows={6}
-                                style={{ border: "2px solid #3b82f6" }} // 추가 스타일 예시 (파란색 테두리)
-                            />
-                        </div>
-                    ) : (
-                        <div
-                            onDoubleClick={() => onStartEdit(TargetComponentType.TEXT)}
-                            style={{
-                                background: PLATE,
-                                color: "#333",
-                                borderRadius: 10,
-                                minHeight: 80,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontWeight: 700,
-                                padding: "12px 16px",
-                                whiteSpace: "pre-wrap", // 줄바꿈과 공백 유지
-                                textAlign: "left"
-                            }}
-                        >
-                            {nodeData?.freeBlockInfo?.question?.text ?? "질문을 입력하세요."}
-                        </div>
-                    )}
+                    <NodeMessageArea background={PLATE}
+                                     nodeId={nodeData?.id}
+                                     text={nodeData?.freeBlockInfo?.question?.text}
+                                     onEditChange={onEditChange}
+                                     onStartEdit={onStartEdit}
+                                     onEditEnd={onEditEnd}
+                    />
 
                 </div>
 

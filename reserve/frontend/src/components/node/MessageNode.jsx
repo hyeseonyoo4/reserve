@@ -2,15 +2,18 @@
 import React from "react";
 import { Handle, Position } from "@xyflow/react";
 import { typeColors } from "../../utils/types.js";
+import { ArrowUpFromLine, ArrowDownFromLine, ChevronUp, ChevronDown } from 'lucide-react';
+
 import TextArea from "../edit/TextArea.jsx";
 import {
     TargetComponentType,
     useScenarioEditStore,
 } from "../../store/useScenarioEditStore.js";
 import { useScenarioDataStore } from "../../store/useScenarioDataStore.js";
-import NodeHeaderTitle from "../common/NodeHeaderTitle.jsx";
+import NodeHeaderTitle from "../node-common/NodeHeaderTitle.jsx";
 import ToggleButton from "../edit/ToggleButton.jsx";
 import { MessageBlockInfo } from "../type/BlockType.js";
+import NodeMessageArea from "../node-common/NodeMessageArea.jsx";
 
 export function MessageNode({ id, data = {}, selected }) {
     const { label, type, data: nodeData, onAdd, onDelete, buttons = null } = data;
@@ -22,7 +25,7 @@ export function MessageNode({ id, data = {}, selected }) {
 
     // styles
     const CARD = typeColors[String(type || "").toUpperCase()] || "#8b5cf6";
-    const PLATE = "#3b82f6";
+    const PLATE = "#f6f9ff";
     const CARD_BG = "#fff";
     const LIGHT_SECTION = `${CARD}22`;
 
@@ -34,7 +37,7 @@ export function MessageNode({ id, data = {}, selected }) {
 
     // ---- slides (messages as slides) ----
     ensureMBI();
-    const slides = nodeData.messageBlockInfo.messages;
+    const messages = nodeData.messageBlockInfo.messages;
     const activeIndex =
         nodeData.messageBlockInfo.activeIndex != null
             ? nodeData.messageBlockInfo.activeIndex
@@ -52,6 +55,34 @@ export function MessageNode({ id, data = {}, selected }) {
         nodeData.messageBlockInfo.activeIndex = nodeData.messageBlockInfo.messages.length - 1;
         setNodeData(nodeData.id, nodeData);
     };
+
+    // 슬라이드 순서 바꿀때 사용
+    const orderChangeSlide = (targetIdx, direction) => {
+        ensureMBI();
+        const arr = nodeData.messageBlockInfo.messages;
+        if (targetIdx < 0 || targetIdx >= arr.length) return; // 범위 체크
+
+        const newIdx = direction === 'UP' ? targetIdx - 1 : targetIdx + 1;
+        if (newIdx < 0 || newIdx >= arr.length) return; // 이동 불가
+
+        // 슬라이드 위치 변경
+        const [movedSlide] = arr.splice(targetIdx, 1);
+        arr.splice(newIdx, 0, movedSlide);
+
+        // 활성 인덱스 업데이트
+        nodeData.messageBlockInfo.activeIndex = newIdx;
+        setNodeData(nodeData.id, nodeData);
+    };
+
+    // 슬라이드 모드에서 -> 텍스트 모드로 변경될 때, 첫번째 message 제외 모두 삭제
+    const removeAllSlidesWithoutFirst = () => {
+        ensureMBI();
+        const arr = nodeData.messageBlockInfo.messages;
+        if (arr.length <= 1) return; // 최소 1개 유지
+        nodeData.messageBlockInfo.messages = [arr[0]];
+        nodeData.messageBlockInfo.activeIndex = 0;
+        setNodeData(nodeData.id, nodeData);
+    }
 
     const removeActiveSlide = () => {
         ensureMBI();
@@ -94,17 +125,17 @@ export function MessageNode({ id, data = {}, selected }) {
 
     const onEditEnd = () => { setTarget(null); setCurrentNode(null); };
 
-    // 버튼 로직 (활성 슬라이드에서만 보여줌)
-    const btns = Array.isArray(buttons) ? buttons : ["버튼 정보", "버튼 1"];
-    const numberRe = /^버튼\s*(\d+)$/;
-
-    const nextButtonLabel = () => {
-        const max = btns.reduce((m, b) => {
-            const r = b.match(numberRe);
-            return r ? Math.max(m, parseInt(r[1], 10)) : m;
-        }, 0);
-        return `버튼 ${max + 1}`;
-    };
+    // // 버튼 로직 (활성 슬라이드에서만 보여줌)
+    // const btns = Array.isArray(buttons) ? buttons : ["버튼 정보", "버튼 1"];
+    // const numberRe = /^버튼\s*(\d+)$/;
+    //
+    // const nextButtonLabel = () => {
+    //     const max = btns.reduce((m, b) => {
+    //         const r = b.match(numberRe);
+    //         return r ? Math.max(m, parseInt(r[1], 10)) : m;
+    //     }, 0);
+    //     return `버튼 ${max + 1}`;
+    // };
 
     const onAddChoice = (e) => {
         e.stopPropagation();
@@ -124,11 +155,143 @@ export function MessageNode({ id, data = {}, selected }) {
         setNodeData(id, { ...data, buttons: newButtons });
     };
 
-    const lastIsNumeric = numberRe.test(btns[btns.length - 1] || "");
-    const hasAnyNumeric = btns.some((b) => numberRe.test(b));
+    // const isEditingText = currentNode === id && target === TargetComponentType.TEXT;
 
-    const isEditingText = currentNode === id && target === TargetComponentType.TEXT;
-    const messageText = slides[activeIndex]?.text ?? "";
+    const SlideContent = (slide, idx) => {
+        const isActive = idx === activeIndex;
+
+        // 축약 카드 (비활성)
+        if (!isActive) {
+            return (
+                <div
+                    key={`slide-${idx}`}
+                    style={collapsedCard}
+                    title={`슬라이드 ${idx + 1} 열기`}
+                >
+                    <div style={{ fontWeight: 800 }}>슬라이드 {idx + 1}</div>
+                    <div style={collapsedMeta}>
+                        {(slide.text || "").slice(0, 18) || "내용 없음"}
+                        {(slide.text || "").length > 18 ? "…" : ""}
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                        {/*<span style={miniBox} />*/}
+                        <ArrowUpFromLine
+                            className={`icon-btn ${idx === 0 ? 'disabled' : ''}`}
+                            aria-disabled={idx === 0}
+                            onClick={e => orderChangeSlide(idx, 'UP')}
+                        />
+                        <ArrowDownFromLine
+                            className={`icon-btn ${idx === messages.length - 1 ? 'disabled': ''}`}
+                            aria-disabled={idx === messages.length - 1}
+                            onClick={e => orderChangeSlide(idx, 'DOWN')}
+                        />
+                        <ChevronDown className={`icon-btn`} onClick={() => setActive(idx)} />
+                    </div>
+                </div>
+            );
+        }
+
+        // 펼친 카드 (활성)
+        return (
+            <div key={`slide-${idx}`} style={expandedCard}>
+                {/* 슬라이드 헤더바 */}
+                <div style={slideHeader}>
+                    <div style={{ fontWeight: 800 }}>슬라이드 {idx + 1}</div>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <ArrowUpFromLine
+                            className={`icon-btn ${idx === 0 ? 'disabled' : ''}`}
+                            aria-disabled={idx === 0}
+                            onClick={e => orderChangeSlide(idx, 'UP')}
+                        />
+                        <ArrowDownFromLine
+                            className={`icon-btn ${idx === messages.length - 1 ? 'disabled': ''}`}
+                            aria-disabled={idx === messages.length - 1}
+                            onClick={e => orderChangeSlide(idx, 'DOWN')}
+                        />
+                        <ChevronUp className={`icon-btn`} onClick={() => setActive(-1)} />
+                    </div>
+                </div>
+
+                {MessageContent(messages, idx)}
+            </div>
+        );
+    }
+
+    const MessageContent = (messages, idx) => {
+        const messageText = messages[idx]?.text ?? "";
+        const btns = messages[idx].buttons;
+        // const lastIsNumeric = numberRe.test(btns[btns.length - 1] || "");
+        // const hasAnyNumeric = btns.some((b) => numberRe.test(b));
+
+        return (
+            <>
+                { /* 메시지 영역 */ }
+                <div style={{ padding: 12 }}>
+
+                    <NodeMessageArea background={PLATE}
+                                     nodeId={nodeData?.id}
+                                     text={messageText}
+                                     onEditChange={onEditChange}
+                                     onStartEdit={onStartEdit}
+                                     onEditEnd={onEditEnd}
+                    />
+
+                    {/* 버튼: 활성 슬라이드에서만 */}
+                    <div style={{ marginTop: 10 }}>
+                        {btns.map((btn, i) => {
+                            const isLast = i === btns.length - 1;
+                            // const showControls = isLast && numberRe.test(btns[btns.length - 1] || "");
+                            if (isLast) {
+                                return (
+                                    <div
+                                        key={`btn-${i}`}
+                                        style={{ position: "relative", marginTop: i ? 8 : 0 }}
+                                    >
+                                        <div style={{ ...thinBar, paddingRight: 96 }}>{btn}</div>
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                top: "50%",
+                                                right: 8,
+                                                transform: "translateY(-50%)",
+                                                display: "flex",
+                                                gap: 8,
+                                            }}
+                                        >
+                                            <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>
+                                                −
+                                            </button>
+                                            <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div key={`btn-${i}`} style={{ ...thinBar, marginTop: i ? 8 : 0 }}>
+                                    {btn}
+                                </div>
+                            );
+                        })}
+
+                        {/*{!lastIsNumeric && (*/}
+                        {/*    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8, gap: 8 }}>*/}
+                        {/*        {hasAnyNumeric && (*/}
+                        {/*            <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>*/}
+                        {/*                −*/}
+                        {/*            </button>*/}
+                        {/*        )}*/}
+                        {/*        <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>*/}
+                        {/*            +*/}
+                        {/*        </button>*/}
+                        {/*    </div>*/}
+                        {/*)}*/}
+                    </div>
+                </div>
+            </>
+        )
+    }
 
     return (
         <div style={{ position: "relative", overflow: "visible" }}>
@@ -167,154 +330,41 @@ export function MessageNode({ id, data = {}, selected }) {
                         onEditEnd={onEditEnd}
                     />
                     <ToggleButton
-                        isOn={nodeData?.messageBlockInfo?.style === "SLIDE" ?? false}
-                        onToggle={(value) =>
-                            onEditChange(TargetComponentType.SLIDE_TOGGLE, value)
-                        }
+                        isOn={nodeData?.messageBlockInfo?.style === "SLIDE" || false}
+                        onToggle={(value) => {
+                            if(nodeData?.messageBlockInfo?.style === "SLIDE") {
+                                if(confirm("현재 슬라이드 모드입니다. 텍스트 모드로 전환하면 슬라이드 정보가 모두 사라집니다. 계속하시겠습니까?")) {
+                                    onEditChange(TargetComponentType.SLIDE_TOGGLE, value);
+                                    removeAllSlidesWithoutFirst();
+                                }
+                            } else {
+                                onEditChange(TargetComponentType.SLIDE_TOGGLE, value)
+                            }
+                        }}
                     />
                 </div>
 
-                {/* 바디: 슬라이드 리스트 */}
-                <div style={{ padding: 12, background: LIGHT_SECTION }}>
-                    {/* 슬라이드 추가/삭제 컨트롤 */}
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                        <div style={{ fontWeight: 900 }}>슬라이드</div>
-                        <div style={{ display: "flex", gap: 6 }}>
-                            <button style={foldBtn} onClick={addSlide}>슬라이드 +</button>
-                            <button style={foldBtn} onClick={removeActiveSlide}>슬라이드 −</button>
-                        </div>
-                    </div>
-
-                    {slides.map((slide, idx) => {
-                        const isActive = idx === activeIndex;
-
-                        // 축약 카드 (비활성)
-                        if (!isActive) {
-                            return (
-                                <div
-                                    key={`slide-${idx}`}
-                                    onClick={() => setActive(idx)}
-                                    style={collapsedCard}
-                                    title={`슬라이드 ${idx + 1} 열기`}
-                                >
-                                    <div style={{ fontWeight: 800 }}>슬라이드 {idx + 1}</div>
-                                    <div style={collapsedMeta}>
-                                        {(slide.text || "").slice(0, 18) || "내용 없음"}
-                                        {(slide.text || "").length > 18 ? "…" : ""}
-                                    </div>
-                                    <div style={{ display: "flex", gap: 6 }}>
-                                        <span style={miniBox} />
-                                        <span style={miniBox} />
-                                        <span style={miniBox} />
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        // 펼친 카드 (활성)
-                        return (
-                            <div key={`slide-${idx}`} style={expandedCard}>
-                                {/* 슬라이드 헤더바 */}
-                                <div style={slideHeader}>
-                                    <div style={{ fontWeight: 800 }}>슬라이드 {idx + 1}</div>
-                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                                        <span style={miniBox} />
-                                        <span style={miniBox} />
-                                        <span style={miniBox} />
-                                        <button style={foldBtn} onClick={() => setActive(-1)}>접기</button>
-                                    </div>
-                                </div>
-
-                                {/* 메시지 */}
-                                <div style={{ padding: 12 }}>
-                                    {isEditingText ? (
-                                        <TextArea
-                                            value={messageText}
-                                            placeholder="메시지를 입력하세요."
-                                            onChange={(newText) =>
-                                                onEditChange(TargetComponentType.TEXT, newText)
-                                            }
-                                            onBlur={onEditEnd}
-                                            autoFocus
-                                            rows={6}
-                                            style={{
-                                                border: "2px solid #3b82f6",
-                                                borderRadius: 12,
-                                                padding: "10px 12px",
-                                                fontWeight: 600,
-                                                maxHeight: 180,
-                                                overflowY: "auto",
-                                            }}
-                                        />
-                                    ) : (
-                                        <div
-                                            onClick={() => onStartEdit(TargetComponentType.TEXT)}
-                                            style={messagePlate}
-                                            title="클릭하여 편집"
-                                        >
-                                            {messageText || "메시지"}
-                                        </div>
-                                    )}
-
-                                    {/* 버튼: 활성 슬라이드에서만 */}
-                                    <div style={{ marginTop: 10 }}>
-                                        {btns.map((btn, i) => {
-                                            const isLast = i === btns.length - 1;
-                                            const showControls = isLast && numberRe.test(btns[btns.length - 1] || "");
-                                            if (showControls) {
-                                                return (
-                                                    <div
-                                                        key={`btn-${i}`}
-                                                        style={{ position: "relative", marginTop: i ? 8 : 0 }}
-                                                    >
-                                                        <div style={{ ...thinBar, paddingRight: 96 }}>{btn}</div>
-                                                        <div
-                                                            style={{
-                                                                position: "absolute",
-                                                                top: "50%",
-                                                                right: 8,
-                                                                transform: "translateY(-50%)",
-                                                                display: "flex",
-                                                                gap: 8,
-                                                            }}
-                                                        >
-                                                            {hasAnyNumeric && (
-                                                                <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>
-                                                                    −
-                                                                </button>
-                                                            )}
-                                                            <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            }
-                                            return (
-                                                <div key={`btn-${i}`} style={{ ...thinBar, marginTop: i ? 8 : 0 }}>
-                                                    {btn}
-                                                </div>
-                                            );
-                                        })}
-
-                                        {!lastIsNumeric && (
-                                            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8, gap: 8 }}>
-                                                {hasAnyNumeric && (
-                                                    <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>
-                                                        −
-                                                    </button>
-                                                )}
-                                                <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>
-                                                    +
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
+                { /* 바디 영역 */ }
+                { nodeData?.messageBlockInfo?.style === "SLIDE"
+                    ? (
+                        <div style={{ padding: 12, background: LIGHT_SECTION }}>
+                            {/* 슬라이드 추가/삭제 컨트롤 */}
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                <div style={{ fontWeight: 900 }}>슬라이드</div>
+                                <div style={{ display: "flex", gap: 6 }}>
+                                    <button style={foldBtn} onClick={addSlide}>슬라이드 +</button>
+                                    <button style={foldBtn} onClick={removeActiveSlide}>슬라이드 −</button>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+                            {messages.map((slide, idx) => SlideContent(slide, idx))}
+                        </div>)
+                    : (
+                        <div style={{ padding: 12, background: LIGHT_SECTION }}>
+                            { MessageContent(messages, 0) }
+                        </div>
+                    )
+                }
+
 
                 {/* 푸터 */}
                 <div

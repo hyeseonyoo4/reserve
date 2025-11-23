@@ -80,7 +80,7 @@ export class Button {
                     id = '',
                     order = 0,
                     text = '',
-                    action = ButtonActionType.CHAT, // 액션 타입 (Enum 사용)
+                    action = ButtonActionType.URL_OPEN, // 액션 타입 (Enum 사용)
                     actionValue = '', // 액션 수행에 필요한 값 (e.g., URL, 파일 경로)
                 } = {}) {
         this.id = id; // 버튼 ID
