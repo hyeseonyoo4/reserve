@@ -59,14 +59,11 @@ export class MessageBlockInfo {
 export class Bubble {
     constructor({
                     id = '',
-
-                    order = 0,
                     imagePath = '', // 이미지 경로
                     text = '', // 텍스트 내용
                     buttons = [], // 버튼 리스트
                 } = {}) {
         this.id = id; // Bubble ID
-        this.order = order; // 순서
         this.imagePath = imagePath; // 이미지 경로
         this.text = text; // 텍스트
         this.buttons = buttons === null ? [] : buttons.map((btn) => new Button(btn)); // 버튼 리스트 (Button 객체로 생성)
@@ -78,13 +75,11 @@ export class Bubble {
 export class Button {
     constructor({
                     id = '',
-                    order = 0,
                     text = '',
                     action = ButtonActionType.URL_OPEN, // 액션 타입 (Enum 사용)
                     actionValue = '', // 액션 수행에 필요한 값 (e.g., URL, 파일 경로)
                 } = {}) {
         this.id = id; // 버튼 ID
-        this.order = order; // 버튼 순서
         this.text = text; // 버튼 텍스트
         this.action = action; // Button 액션 타입 (Enum)
         this.actionValue = actionValue; // 액션 관련 값

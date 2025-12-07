@@ -6,6 +6,8 @@ target/
 
 node_modules
 
+uploads/
+
 
 ### STS ###
 .apt_generated

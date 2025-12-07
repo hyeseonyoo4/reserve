@@ -14,8 +14,6 @@ import java.util.List;
 public class Bubble {
     @Id
     private String id;
-
-    private Integer order;
     private String imagePath;
     private String text;
     private List<Button> buttons; // 버튼 리스트

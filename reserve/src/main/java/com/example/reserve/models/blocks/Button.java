@@ -14,8 +14,6 @@ import java.util.List;
 public class Button {
     @Id
     private String id;
-
-    private Integer order;
     private String text;
 
     // Action

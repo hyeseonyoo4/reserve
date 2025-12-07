@@ -1,8 +1,8 @@
 // src/components/node/MessageNode.jsx
-import React from "react";
+import React, {useRef} from "react";
 import { Handle, Position } from "@xyflow/react";
 import { typeColors } from "../../utils/types.js";
-import { ArrowUpFromLine, ArrowDownFromLine, ChevronUp, ChevronDown } from 'lucide-react';
+import {ArrowUpFromLine, ArrowDownFromLine, ChevronUp, ChevronDown, ImagePlus} from 'lucide-react';
 
 import TextArea from "../edit/TextArea.jsx";
 import {
@@ -14,6 +14,8 @@ import NodeHeaderTitle from "../node-common/NodeHeaderTitle.jsx";
 import ToggleButton from "../edit/ToggleButton.jsx";
 import { MessageBlockInfo } from "../type/BlockType.js";
 import NodeMessageArea from "../node-common/NodeMessageArea.jsx";
+import ButtonManager from "../edit/ButtonManager.jsx";
+import {baseURL, fileUpload} from "../../utils/axios.js";
 
 export function MessageNode({ id, data = {}, selected }) {
     const { label, type, data: nodeData, onAdd, onDelete, buttons = null } = data;
@@ -51,7 +53,12 @@ export function MessageNode({ id, data = {}, selected }) {
 
     const addSlide = () => {
         ensureMBI();
-        nodeData.messageBlockInfo.messages.push({ text: "" });
+        nodeData.messageBlockInfo.messages.push({
+            id: `message-${Date.now()}`,
+            text: "",
+            buttons: [],
+            imagePath: null,
+        });
         nodeData.messageBlockInfo.activeIndex = nodeData.messageBlockInfo.messages.length - 1;
         setNodeData(nodeData.id, nodeData);
     };
@@ -191,6 +198,12 @@ export function MessageNode({ id, data = {}, selected }) {
             );
         }
 
+        const fileRef = useRef(null);
+        const openPicker = (e) => {
+            e.stopPropagation();
+            fileRef.current?.click();               // 숨겨진 input 열기
+        };
+
         // 펼친 카드 (활성)
         return (
             <div key={`slide-${idx}`} style={expandedCard}>
@@ -198,6 +211,21 @@ export function MessageNode({ id, data = {}, selected }) {
                 <div style={slideHeader}>
                     <div style={{ fontWeight: 800 }}>슬라이드 {idx + 1}</div>
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        {/* 사진 추가 버튼 */}
+                        <button
+                            onClick={openPicker}
+                            title="사진/파일 추가"
+                            style={{
+                                border: "none",
+                                background: "transparent",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                padding: 4,
+                            }}
+                        >
+                            <ImagePlus size={18} />
+                        </button>
                         <ArrowUpFromLine
                             className={`icon-btn ${idx === 0 ? 'disabled' : ''}`}
                             aria-disabled={idx === 0}
@@ -212,21 +240,67 @@ export function MessageNode({ id, data = {}, selected }) {
                     </div>
                 </div>
 
-                {MessageContent(messages, idx)}
+                {MessageContent(messages, idx, fileRef)}
             </div>
         );
     }
 
-    const MessageContent = (messages, idx) => {
+    const MessageContent = (messages, idx, fileRef) => {
+
         const messageText = messages[idx]?.text ?? "";
+        const imgSrc = messages[idx].imagePath;
         const btns = messages[idx].buttons;
         // const lastIsNumeric = numberRe.test(btns[btns.length - 1] || "");
         // const hasAnyNumeric = btns.some((b) => numberRe.test(b));
+
+
+        const onFileChange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            console.log(file);
+
+            fileUpload(file).then(
+                (res) => {
+                    if (res.code === "0000") {
+                        // 업로드된 파일 경로를 메시지에 반영
+                        console.log(res.data);
+                        messages[idx].imagePath = res.data.fileUrl; // 서버에서 반환된 파일 경로 사용
+                        setNodeData(nodeData.id, nodeData);
+                    } else {
+                        alert("파일 업로드에 실패했습니다.");
+                    }
+                }
+            ).catch(
+                (err) => {
+                    console.error(err);
+                    alert("파일 업로드 중 오류가 발생했습니다.");
+                }
+            )
+
+            // FlowCanvas에서 주입해줄 콜백으로 위임 (미리보기/업로드/상태업데이트)
+            // onImagePick?.(id, file);
+            // 같은 파일 연속 선택 가능하게 리셋
+            e.target.value = "";
+        };
 
         return (
             <>
                 { /* 메시지 영역 */ }
                 <div style={{ padding: 12 }}>
+
+                    {imgSrc ? (
+                        <img
+                            alt="첨부 이미지"
+                            src={imgSrc.startsWith("/images/") ? `${baseURL}${imgSrc}` : imgSrc}
+                            style={{
+                                width: "100%",
+                                maxHeight: 160,
+                                objectFit: "cover",
+                                borderRadius: 12,
+                            }}
+                        />
+                    ) : null}
 
                     <NodeMessageArea background={PLATE}
                                      nodeId={nodeData?.id}
@@ -236,57 +310,61 @@ export function MessageNode({ id, data = {}, selected }) {
                                      onEditEnd={onEditEnd}
                     />
 
+                    {/* 숨겨진 파일 선택기 */}
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*"            // 파일도 허용하려면 "image/*,.pdf,.doc,.docx" 등으로 변경
+                        style={{ display: "none" }}
+                        onChange={onFileChange}
+                    />
+
                     {/* 버튼: 활성 슬라이드에서만 */}
                     <div style={{ marginTop: 10 }}>
-                        {btns.map((btn, i) => {
-                            const isLast = i === btns.length - 1;
-                            // const showControls = isLast && numberRe.test(btns[btns.length - 1] || "");
-                            if (isLast) {
-                                return (
-                                    <div
-                                        key={`btn-${i}`}
-                                        style={{ position: "relative", marginTop: i ? 8 : 0 }}
-                                    >
-                                        <div style={{ ...thinBar, paddingRight: 96 }}>{btn}</div>
-                                        <div
-                                            style={{
-                                                position: "absolute",
-                                                top: "50%",
-                                                right: 8,
-                                                transform: "translateY(-50%)",
-                                                display: "flex",
-                                                gap: 8,
-                                            }}
-                                        >
-                                            <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>
-                                                −
-                                            </button>
-                                            <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            }
-                            return (
-                                <div key={`btn-${i}`} style={{ ...thinBar, marginTop: i ? 8 : 0 }}>
-                                    {btn}
-                                </div>
-                            );
-                        })}
-
-                        {/*{!lastIsNumeric && (*/}
-                        {/*    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8, gap: 8 }}>*/}
-                        {/*        {hasAnyNumeric && (*/}
-                        {/*            <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>*/}
-                        {/*                −*/}
-                        {/*            </button>*/}
-                        {/*        )}*/}
-                        {/*        <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>*/}
-                        {/*            +*/}
-                        {/*        </button>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                        <ButtonManager
+                            buttons={btns}
+                            onChange={(newButtons) => {
+                                const mbi = nodeData.messageBlockInfo;
+                                mbi.messages[idx].buttons = newButtons;
+                                setNodeData(nodeData.id, nodeData);
+                            }}
+                        />
+                        {/*{btns && btns.map((btn, i) => {*/}
+                        {/*    const isLast = i === btns.length - 1;*/}
+                        {/*    // const showControls = isLast && numberRe.test(btns[btns.length - 1] || "");*/}
+                        {/*    if (isLast) {*/}
+                        {/*        return (*/}
+                        {/*            <div*/}
+                        {/*                key={`btn-${i}`}*/}
+                        {/*                style={{ position: "relative", marginTop: i ? 8 : 0 }}*/}
+                        {/*            >*/}
+                        {/*                <div style={{ ...thinBar, paddingRight: 96 }}>{btn}</div>*/}
+                        {/*                <div*/}
+                        {/*                    style={{*/}
+                        {/*                        position: "absolute",*/}
+                        {/*                        top: "50%",*/}
+                        {/*                        right: 8,*/}
+                        {/*                        transform: "translateY(-50%)",*/}
+                        {/*                        display: "flex",*/}
+                        {/*                        gap: 8,*/}
+                        {/*                    }}*/}
+                        {/*                >*/}
+                        {/*                    <button onClick={onRemoveChoice} title="버튼 삭제" style={minusChip}>*/}
+                        {/*                        −*/}
+                        {/*                    </button>*/}
+                        {/*                    <button onClick={onAddChoice} title="버튼 추가" style={plusChip}>*/}
+                        {/*                        +*/}
+                        {/*                    </button>*/}
+                        {/*                </div>*/}
+                        {/*            </div>*/}
+                        {/*        );*/}
+                        {/*    }*/}
+                        {/*    return (*/}
+                        {/*        <div key={`btn-${i}`} style={{ ...thinBar, marginTop: i ? 8 : 0 }}>*/}
+                        {/*            {btn}*/}
+                        {/*        </div>*/}
+                        {/*    );*/}
+                        {/*})}*/}
                     </div>
                 </div>
             </>
